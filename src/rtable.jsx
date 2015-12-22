@@ -5,10 +5,10 @@ class RTable extends React.Component {
     this.state = {
       results: []
     };
-    this.loader = new RTable.DataLoader(this);
+    this.loader = new RTable.DataLoader(this, this.props.dataUrl);
   }
   componentDidMount() {
-    this.loader.load(this.props.dataUrl);
+    this.loader.loadInitial();
   }
   render() {
     let header = this.props.columns.map((col, n) =>
@@ -31,12 +31,12 @@ class RTable extends React.Component {
         </tbody>
         <tfoot>
           <tr><td colSpan={this.props.columns.length}>
-            {this.state.previous ? <a href="#" onClick={this.loader.fn.prevPage}>prev</a> : null}
+            {this.state.hasPrev ? <a href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a> : null}
             {' '}
             page {this.state.page} of {this.state.pages},
             results {this.state.firstResult}-{this.state.lastResult} of {this.state.count}
             {' '}
-            {this.state.next ? <a href="#" onClick={this.loader.fn.nextPage}>next</a> : null}
+            {this.state.hasNext ? <a href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a> : null}
           </td></tr>
         </tfoot>
       </table>
@@ -45,13 +45,19 @@ class RTable extends React.Component {
 }
 
 class DataLoader {
-  constructor(component) {
+  constructor(component, baseUrl) {
     this.component = component;
+    this.baseUrl = baseUrl;
     this.fn = {
       goToPage: this.goToPage.bind(this),
       nextPage: this.nextPage.bind(this),
       prevPage: this.prevPage.bind(this)
     }
+  }
+  loadInitial() {
+    let page = parseUri(window.location).queryKey.page || 1;
+    let url = UpdateQueryString('page', page, this.baseUrl);
+    this.load(url);
   }
   currentState() {
     return this.component.state;
@@ -63,8 +69,14 @@ class DataLoader {
     .then(response => {
       // have: count, next, previous, results
       response.fullUrl = url;
+      response.query = '?' + parseUri(url).query;
       response.page = parseInt(params.page) || 1;
       response.page0 = response.page - 1;
+      response.hasNext = !!response.next;
+      response.hasPrev = !!response.previous;
+      response.nextQuery = UpdateQueryString('page', response.page+1, response.query);
+      response.prevQuery = UpdateQueryString('page', response.page-1, response.query);
+      // response.prevQuery = !!response.next;
       if (response.next) {
         let pageSize = response.results.length;
         response.pages = divideRoundUp(response.count, pageSize);
@@ -80,9 +92,14 @@ class DataLoader {
     });
   }
   goToPage(event, page) {
+    if (event.ctrlKey || event.altKey || event.shiftKey) return;
     event.preventDefault();
-    let newUrl = UpdateQueryString('page', page, this.currentState().fullUrl);
-    return this.load(newUrl);
+    let newDataUrl = UpdateQueryString('page', page, this.currentState().fullUrl);
+    let newWindowUrl = UpdateQueryString('page', page);
+    if (window.history.replaceState) {
+      window.history.replaceState({}, '', newWindowUrl);
+    }
+    return this.load(newDataUrl);
   }
   nextPage(event) {
     return this.goToPage(event, this.currentState().page+1);
