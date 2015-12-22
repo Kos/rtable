@@ -5,9 +5,9 @@ Easy AJAX tables designed for use with Django Rest Framework, powered by React
 ## Features
 
 - [x] Columns
+- [ ] Pagination
 - [ ] Sorting
 - [ ] Filtering
-- [ ] Pagination
 - [ ] Window history
 - [ ] Themes (custom markup)
 
@@ -21,18 +21,20 @@ Misc todos:
 
 Given an AJAX endpoint `/api/data/` that returns a json:
 
-    [
-      {
-        foo: "Xmwpxktj",
-        bar: "Wgtdpoicbjhpqfesc",
-        id: 732
-      },
-      {
-        foo: "Efrsfwudbgwdmb",
-        bar: "Typlapiokriooygupu",
-        id: 485
-      }
-   ]
+    {
+      "results": [
+        {
+          foo: "Xmwpxktj",
+          bar: "Wgtdpoicbjhpqfesc",
+          id: 732
+        },
+        {
+          foo: "Efrsfwudbgwdmb",
+          bar: "Typlapiokriooygupu",
+          id: 485
+        }
+      ]
+    }
 
 
 create a component like:

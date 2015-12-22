@@ -19,6 +19,6 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.default_view),
-    url(r'^api/data/$', views.data),
+    url(r'^api/data/$', views.DataList.as_view()),
     url(r'^admin/', include(admin.site.urls)),
 ]

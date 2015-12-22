@@ -8,8 +8,9 @@ class RTable extends React.Component {
   }
   componentDidMount() {
     $.get(this.props.dataUrl)
-    .then(rows => {
-      this.setState({rows: rows});
+    .then(response => {
+      // count, next, previous, results
+      this.setState({rows: response.results});
     });
   }
   render() {
