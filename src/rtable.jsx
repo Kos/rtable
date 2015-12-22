@@ -22,23 +22,21 @@ class RTable extends React.Component {
     });
 
     return (
-      <table>
+      <table className="table table-striped table-hover">
         <thead>
+          <tr><td className="text-center" colSpan={this.props.columns.length}>
+            {this.state.hasPrev ? <a className="btn btn-primary" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a> : null}
+            {' '}
+            page {this.state.page} of {this.state.pages},
+            results {this.state.firstResult}-{this.state.lastResult} of {this.state.count}
+            {' '}
+            {this.state.hasNext ? <a className="btn btn-primary" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a> : null}
+          </td></tr>
           <tr>{header}</tr>
         </thead>
         <tbody>
           {rows}
         </tbody>
-        <tfoot>
-          <tr><td colSpan={this.props.columns.length}>
-            {this.state.hasPrev ? <a href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a> : null}
-            {' '}
-            page {this.state.page} of {this.state.pages},
-            results {this.state.firstResult}-{this.state.lastResult} of {this.state.count}
-            {' '}
-            {this.state.hasNext ? <a href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a> : null}
-          </td></tr>
-        </tfoot>
       </table>
     );
   }

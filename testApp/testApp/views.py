@@ -23,8 +23,6 @@ class DataPagination(pagination.PageNumberPagination):
 
 
 class DataList(generics.ListAPIView):
-
-    pretty_name = 'SessionList'
     serializer_class = DataSerializer
     pagination_class = DataPagination
 

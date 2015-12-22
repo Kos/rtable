@@ -2,12 +2,15 @@
 <html>
   <head>
     <title>Hi there</title>
+    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap-theme.min.css">
   </head>
   <body>
+
     <script src="/static/react/react-with-addons.js"></script>
     <script src="/static/react/react-dom.js"></script>
     <script src="/static/rtable.js"></script>
-    <div id="container"></div>
+    <div id="react-container" class="container"></div>
     <script>
     ReactDOM.render(
       React.createElement(RTable, {
@@ -18,7 +21,7 @@
           {'name': 'Hometown', 'key': 'bar'},
         ],
       }),
-      document.getElementById('container')
+      document.getElementById('react-container')
     );
     </script>
   </body>
