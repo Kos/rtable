@@ -1,0 +1,38 @@
+{
+  "extends": "eslint:recommended",
+  "ecmaFeatures": {
+    // All that Babel supports minus stuff that doesn't make sense for us
+    "jsx": true,
+    "arrowFunctions": true,
+    "binaryLiterals": true,
+    "blockBindings": true,
+    "classes": true,
+    "defaultParams": true,
+    "destructuring": true,
+    "forOf": false, // depends on Symbol
+    "generators": false,  // depends on Symbol
+    "objectLiteralComputedProperties": true,
+    "objectLiteralDuplicateProperties": true,
+    "objectLiteralShorthandMethods": true,
+    "objectLiteralShorthandProperties": true,
+    "regexUFlag": true,
+    "regexYFlag": true,
+    "restParams": true,
+    "spread": true,
+    "superInFunctions": true,
+    "templateStrings": true,
+    "unicodeCodePointEscapes": true,
+
+    "modules": false,
+    "globalReturn": false,
+    "octalLiterals": false,
+  },
+  "rules": {
+    "no-console": [0],
+    "no-unused-vars": [2, {"vars": "local", "args": "none"}]
+  },
+  "env": {
+    "browser": true,
+    "jquery": true
+  },
+}

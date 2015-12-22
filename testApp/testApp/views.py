@@ -1,9 +1,9 @@
 import string
 import random
-from rest_framework import views, serializers, generics
+from rest_framework import serializers, generics, pagination
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.template.response import HttpResponse, TemplateResponse
+from django.template.response import TemplateResponse
 
 
 def default_view(request):
@@ -16,15 +16,21 @@ class DataSerializer(serializers.Serializer):
     bar = serializers.CharField()
 
 
+class DataPagination(pagination.PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+
 class DataList(generics.ListAPIView):
 
     pretty_name = 'SessionList'
     serializer_class = DataSerializer
-    paginate_by = 20
+    pagination_class = DataPagination
 
     def get_queryset(self):
         rng = random.Random(23123)
-        return [randomObject(rng) for _ in xrange(20)]
+        return [randomObject(rng) for _ in xrange(45)]
 
 
 @api_view(['GET'])
