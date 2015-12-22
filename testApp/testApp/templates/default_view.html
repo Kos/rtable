@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Hi there</title>
+  </head>
+  <body>
+    <script src="/static/react/react-with-addons.js"></script>
+    <script src="/static/react/react-dom.js"></script>
+    <script src="/static/jquery/jquery-1.11.1.min.js"></script>
+    <script src="/static/rtable.js"></script>
+    <div id="container"></div>
+    <script>
+    ReactDOM.render(
+      React.createElement(RTable, {
+        dataUrl: '/api/data/',
+        columns: [
+          {'name': '#', 'key': 'id'},
+          {'name': 'Name', 'key': 'foo'},
+          {'name': 'Hometown', 'key': 'bar'},
+        ],
+        key: 'id',
+      }),
+      document.getElementById('container')
+    );
+    </script>
+  </body>
+</html>
