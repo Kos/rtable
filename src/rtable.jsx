@@ -5,11 +5,10 @@ class RTable extends React.Component {
     this.state = {
       results: []
     };
-    this.dataSource = new RTable.DataSource();
+    this.loader = new RTable.DataLoader(this);
   }
   componentDidMount() {
-    this.dataSource.get(this.props.dataUrl)
-    .then(response => this.setState(response));
+    this.loader.load(this.props.dataUrl);
   }
   render() {
     let header = this.props.columns.map((col, n) =>
@@ -32,25 +31,32 @@ class RTable extends React.Component {
         </tbody>
         <tfoot>
           <tr><td colSpan={this.props.columns.length}>
+            {this.state.previous ? <a href="#" onClick={this.loader.fn.prevPage}>prev</a> : null}
+            {' '}
             page {this.state.page} of {this.state.pages},
             results {this.state.firstResult}-{this.state.lastResult} of {this.state.count}
-            <a href="#" onClick={this.nextPage()}>next</a>
+            {' '}
+            {this.state.next ? <a href="#" onClick={this.loader.fn.nextPage}>next</a> : null}
           </td></tr>
         </tfoot>
       </table>
     );
   }
-  nextPage() {
-    return event => {
-      event.preventDefault();
-      this.dataSource.next(this.state)
-      .then(response => this.setState(response));
-    }
-  }
 }
 
-class DataSource {
-  get(url) {
+class DataLoader {
+  constructor(component) {
+    this.component = component;
+    this.fn = {
+      goToPage: this.goToPage.bind(this),
+      nextPage: this.nextPage.bind(this),
+      prevPage: this.prevPage.bind(this)
+    }
+  }
+  currentState() {
+    return this.component.state;
+  }
+  load(url) {
     let divideRoundUp = (a, b) => Math.floor((a+b-1)/b);
     let params = parseUri(url).queryKey;
     return getJson(url)
@@ -69,24 +75,24 @@ class DataSource {
         response.lastResult = response.count;
         response.firstResult = response.count - response.results.length + 1;
       }
+      this.component.setState(response);
       return response;
     });
   }
-  goToPage(response, page) {
-    // debugger;
-    let newUrl = UpdateQueryString('page', page, response.fullUrl);
-
-    return this.get(newUrl);
+  goToPage(event, page) {
+    event.preventDefault();
+    let newUrl = UpdateQueryString('page', page, this.currentState().fullUrl);
+    return this.load(newUrl);
   }
-  next(response) {
-    return this.goToPage(response, response.page+1);
+  nextPage(event) {
+    return this.goToPage(event, this.currentState().page+1);
   }
-  prev(response) {
-    return this.goToPage(response, response.page-1);
+  prevPage(event) {
+    return this.goToPage(event, this.currentState().page-1);
   }
 }
 
-RTable.DataSource = DataSource;
+RTable.DataLoader = DataLoader;
 
 function getJson(url) {
   var request = new XMLHttpRequest();
