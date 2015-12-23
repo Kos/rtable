@@ -1,19 +1,17 @@
 import string
 import random
-from rest_framework import serializers, generics, pagination
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from rest_framework import serializers, generics, pagination, filters
 from django.template.response import TemplateResponse
+from .models import Data
 
 
 def default_view(request):
     return TemplateResponse(request, 'default_view.html')
 
 
-class DataSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    foo = serializers.CharField()
-    bar = serializers.CharField()
+class DataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Data
 
 
 class DataPagination(pagination.PageNumberPagination):
@@ -25,24 +23,22 @@ class DataPagination(pagination.PageNumberPagination):
 class DataList(generics.ListAPIView):
     serializer_class = DataSerializer
     pagination_class = DataPagination
+    filter_backends = (filters.OrderingFilter,)
 
     def get_queryset(self):
-        rng = random.Random(23123)
-        return [randomObject(rng) for _ in xrange(45)]
+        if not Data.objects.exists():
+            create_fake_data(random.Random(23123), 45)
+        return Data.objects.all()
 
 
-@api_view(['GET'])
-def data(request):
-    return Response(data)
-
-
-class Model(object):
-    pass
+def create_fake_data(rng, n):
+    for _ in xrange(n):
+        randomObject(rng).save()
 
 
 def randomObject(rng):
-    m = Model()
-    m.id = rng.randint(0, 1000)
+    m = Data()
+    m.amount = rng.randint(0, 1000)
     m.foo = randomWord(rng)
     m.bar = randomWord(rng)
     return m
