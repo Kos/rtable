@@ -12,7 +12,13 @@ class RTable extends React.Component {
   }
   render() {
     let header = this.props.columns.map((col, n) =>
-      <th key={n}>{col.name}</th>
+      <th key={n} onClick={this.loader.fn.orderToggle(col.key)}>
+        {col.name}
+        {this.state.ordering == col.key ? "\u25B2" :
+         this.state.ordering == "-"+col.key ? "\u25BC" :
+         null
+        }
+      </th>
     );
     let rows = this.state.results.map((row, m) => {
       let cells = this.props.columns.map((col, n) =>
@@ -49,7 +55,9 @@ class DataLoader {
     this.fn = {
       goToPage: this.goToPage.bind(this),
       nextPage: this.nextPage.bind(this),
-      prevPage: this.prevPage.bind(this)
+      prevPage: this.prevPage.bind(this),
+      orderBy: column => (event => this.orderBy(event, column)),
+      orderToggle: column => (event => this.orderToggle(event, column))
     }
   }
   loadInitial() {
@@ -62,18 +70,20 @@ class DataLoader {
   }
   load(url) {
     let divideRoundUp = (a, b) => Math.floor((a+b-1)/b);
-    let params = parseUri(url).queryKey;
+    let parsedUrl = parseUri(url);
+    let urlParams = parsedUrl.queryKey;
     return getJson(url)
     .then(response => {
       // have: count, next, previous, results
       response.fullUrl = url;
-      response.query = '?' + parseUri(url).query;
-      response.page = parseInt(params.page) || 1;
+      response.query = '?' + parsedUrl.query;
+      response.page = parseInt(urlParams.page) || 1;
       response.page0 = response.page - 1;
       response.hasNext = !!response.next;
       response.hasPrev = !!response.previous;
       response.nextQuery = UpdateQueryString('page', response.page+1, response.query);
       response.prevQuery = UpdateQueryString('page', response.page-1, response.query);
+      response.ordering = urlParams.ordering || null;
       // response.prevQuery = !!response.next;
       if (response.next) {
         let pageSize = response.results.length;
@@ -104,6 +114,29 @@ class DataLoader {
   }
   prevPage(event) {
     return this.goToPage(event, this.currentState().page-1);
+  }
+  orderBy(event, ordering) {
+    if (event.ctrlKey || event.altKey || event.shiftKey) return;
+    event.preventDefault();
+    let newDataUrl = UpdateQueryString('ordering', ordering, this.currentState().fullUrl);
+    let newWindowUrl = UpdateQueryString('ordering', ordering);
+    if (window.history.replaceState) {
+      window.history.replaceState({}, '', newWindowUrl);
+    }
+    return this.load(newDataUrl);
+  }
+  orderToggle(event, ordering) {
+    if (!ordering.length) {
+      return;
+    }
+    if (this.currentState().ordering == ordering) {
+      if (ordering[0] == '-') {
+        ordering = ordering.substr(1);
+      } else {
+        ordering = '-'+ordering;
+      }
+    }
+    return this.orderBy(event, ordering);
   }
 }
 
