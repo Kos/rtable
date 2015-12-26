@@ -1,6 +1,16 @@
-# RTables
+# RTable
 
-Easy AJAX tables designed for use with Django Rest Framework, powered by React
+AJAX-powered table / data grid, powered by React and inspired by JQGrid.
+
+Design goals:
+
+- Easy to set up
+- Work out-of-the-box with json endpoints exposed by Django Rest Framework
+- Accessible:
+    - page refresh and bookmarking works (url is updated as you navigate)
+    - control-click on buttons works (navigation is normal links with extra JS on top)
+
+Status: *proof of concept*, needs testing and tidying up.
 
 ## Features
 
@@ -25,24 +35,25 @@ Misc todos for the future:
 
 ### Basic use
 
-Given an AJAX endpoint `/api/data/` that returns a json:
+Given an AJAX endpoint `/api/data/` that returns a json like:
 
     {
-      ""
+      "count": 45,
+      "next": "https://example.com/api/data/?page=2",
+      "previous": null,
       "results": [
         {
-          foo: "Xmwpxktj",
-          bar: "Wgtdpoicbjhpqfesc",
-          id: 732
+          id: 732,
+          foo: "Dilvish",
+          bar: "black"
         },
         {
-          foo: "Efrsfwudbgwdmb",
-          bar: "Typlapiokriooygupu",
-          id: 485
+          id: 485,
+          foo: "Mahasamatman",
+          bar: "yellow"
         }
       ]
     }
-
 
 create a component like:
 
@@ -50,14 +61,24 @@ create a component like:
       React.createElement(RTable, {
         dataUrl: '/api/data/',
         columns: [
-          {'label': '#', 'key': 'id'},
-          {'label': 'Name', 'key': 'foo'},
-          {'label': 'Hometown', 'key': 'bar'},
+          {'label': '#', 'name': 'id'},
+          {'label': 'Name', 'name': 'foo'},
+          {'label': 'Favourite colour', 'name': 'bar'},
         ],
       }),
       document.getElementById('container')
     );
 
-### Customisation
+### Powerups
+
+#### Sorting
+
+...
+
+#### Filters
+
+...
 
 ### Other data sources
+
+...
