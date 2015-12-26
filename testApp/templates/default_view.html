@@ -18,8 +18,16 @@
         columns: [
           {'name': '#', 'key': 'amount'},
           {'name': 'Name', 'key': 'foo'},
-          {'name': 'Hometown', 'key': 'bar'},
+          {'name': 'Favourite colour', 'key': 'bar'},
         ],
+        filters: [
+          {'name': 'Name', 'key': 'foo'},
+          {'name': 'Colour', 'key': 'bar', 'choices': [
+            {'label': 'Beige', 'value': 'beige'},
+            {'label': 'Blue', 'value': 'blue'},
+            {'label': 'Green', 'value': 'green'},
+          ]},
+        ]
       }),
       document.getElementById('react-container')
     );

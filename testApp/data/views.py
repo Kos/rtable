@@ -1,8 +1,9 @@
-import string
-import random
-from rest_framework import serializers, generics, pagination, filters
-from django.template.response import TemplateResponse
 from .models import Data
+from django.template.response import TemplateResponse
+from rest_framework import serializers, generics, pagination, filters
+import django_filters
+import random
+import string
 
 
 def default_view(request):
@@ -20,10 +21,19 @@ class DataPagination(pagination.PageNumberPagination):
     max_page_size = 1000
 
 
+class DataFilter(django_filters.FilterSet):
+    foo = django_filters.CharFilter(lookup_type='istartswith')
+
+    class Meta:
+        model = Data
+        fields = ['foo', 'bar']
+
+
 class DataList(generics.ListAPIView):
     serializer_class = DataSerializer
     pagination_class = DataPagination
-    filter_backends = (filters.OrderingFilter,)
+    filter_backends = (filters.DjangoFilterBackend, filters.OrderingFilter,)
+    filter_class = DataFilter
 
     def get_queryset(self):
         if not Data.objects.exists():
@@ -40,7 +50,7 @@ def randomObject(rng):
     m = Data()
     m.amount = rng.randint(0, 1000)
     m.foo = randomWord(rng)
-    m.bar = randomWord(rng)
+    m.bar = rng.choice(['red', 'blue', 'green', 'greenish', 'cyan', 'magenta', 'yellow', 'beige', 'baige'])
     return m
 
 

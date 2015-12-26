@@ -11,7 +11,9 @@ class RTable extends React.Component {
     this.loader.loadInitial();
   }
   render() {
-    let header = this.props.columns.map((col, n) =>
+    let filters = this.props.filters;
+    let columns = this.props.columns;
+    let header = columns.map((col, n) =>
       <th key={n} onClick={this.loader.fn.orderToggle(col.key)}>
         {col.name}
         {this.state.ordering == col.key ? "\u25B2" :
@@ -30,7 +32,7 @@ class RTable extends React.Component {
     return (
       <table className="table table-striped table-hover">
         <thead>
-          <tr><td className="text-center" colSpan={this.props.columns.length}>
+          <tr><td className="text-center" colSpan={columns.length}>
             {this.state.hasPrev
               ? <a className="btn btn-primary" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a>
               : <button className="btn btn-primary" disabled>prev</button> }
@@ -41,6 +43,25 @@ class RTable extends React.Component {
             {this.state.hasNext
               ? <a className="btn btn-primary" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
               : <button className="btn btn-primary" disabled>next</button> }
+          </td></tr>
+          <tr><td className="form-inline" colSpan={columns.length}>
+            {filters.map((filter, i) =>
+              <span key={i}>
+                <label>
+                  {filter.name+':'}
+                </label>
+                {' '}
+                {filter.choices
+                  ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.key)}>
+                      {filter.choices.map((choice, j) =>
+                        <option key={j} value={choice.value}>{choice.label}</option>
+                      )}
+                    </select>
+                  : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.key)}/>
+                }
+                {' '}
+              </span>
+            )}
           </td></tr>
           <tr>{header}</tr>
         </thead>
@@ -56,12 +77,15 @@ class DataLoader {
   constructor(component, baseUrl) {
     this.component = component;
     this.baseUrl = baseUrl;
+    this.filterDelay = 800;
     this.fn = {
       goToPage: this.goToPage.bind(this),
       nextPage: this.nextPage.bind(this),
       prevPage: this.prevPage.bind(this),
       orderBy: column => (event => this.orderBy(event, column)),
-      orderToggle: column => (event => this.orderToggle(event, column))
+      orderToggle: column => (event => this.orderToggle(event, column)),
+      filter: key => (event => this.filter(event, key)),
+      filterDelayed: key => delayed(this.filterDelay, event => this.filter(event, key))
     }
   }
   loadInitial() {
@@ -141,6 +165,16 @@ class DataLoader {
     }
     return this.orderBy(event, ordering);
   }
+  filter(event, key) {
+    let newFilterValue = event.target.value || null;
+    let newDataUrl = UpdateQueryString(key, newFilterValue, this.currentState().fullUrl);
+    let newWindowUrl = UpdateQueryString(key, newFilterValue);
+    if (window.history.replaceState) {
+      window.history.replaceState({}, '', newWindowUrl);
+    }
+    return this.load(newDataUrl);
+
+  }
 }
 
 RTable.DataLoader = DataLoader;
@@ -165,6 +199,16 @@ function getJson(url) {
     };
     request.send();
   });
+}
+
+function delayed(delay, fn) {
+  let timeout = null;
+  return function() {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(() => fn.apply(null, arguments), delay);
+  }
 }
 
 
