@@ -1,1 +1,1 @@
-../../output/rtable.js
+../../dist/rtable.js
