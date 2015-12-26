@@ -14,17 +14,17 @@ class RTable extends React.Component {
     let filters = this.props.filters;
     let columns = this.props.columns;
     let header = columns.map((col, n) =>
-      <th key={n} onClick={this.loader.fn.orderToggle(col.key)}>
-        {col.name}
-        {this.state.ordering == col.key ? "\u25B2" :
-         this.state.ordering == "-"+col.key ? "\u25BC" :
+      <th key={n} onClick={this.loader.fn.orderToggle(col.name)}>
+        {col.label}
+        {this.state.ordering == col.name ? "\u25B2" :
+         this.state.ordering == "-"+col.name ? "\u25BC" :
          null
         }
       </th>
     );
     let rows = this.state.results.map((row, m) => {
       let cells = this.props.columns.map((col, n) =>
-        <td key={n}>{row[col.key]}</td>
+        <td key={n}>{row[col.name]}</td>
       );
       return <tr key={m}>{cells}</tr>;
     });
@@ -48,16 +48,16 @@ class RTable extends React.Component {
             {filters.map((filter, i) =>
               <span key={i}>
                 <label>
-                  {filter.name+':'}
+                  {filter.label+':'}
                 </label>
                 {' '}
                 {filter.choices
-                  ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.key)}>
+                  ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.name)}>
                       {filter.choices.map((choice, j) =>
                         <option key={j} value={choice.value}>{choice.label}</option>
                       )}
                     </select>
-                  : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.key)}/>
+                  : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.name)}/>
                 }
                 {' '}
               </span>

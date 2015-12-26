@@ -7,15 +7,19 @@ Easy AJAX tables designed for use with Django Rest Framework, powered by React
 - [x] Columns
 - [x] Pagination
 - [x] Sorting
-- [ ] Filtering
+- [x] Filtering
 - [x] Window history
-- [ ] Themes (custom markup)
+- [ ] Theming (custom markup)
+- [ ] Arbitrary data sources
 
 Misc todos for the future:
 
-- [ ] Multi-sorting
-- [ ] Advanced pagination
-- [ ] Column identity
+- [ ] Go to page N
+- [ ] Multi-column sorting
+- [ ] Multi-choice filtering
+- [ ] Advanced pagination (cursors)
+- [ ] Primary key column
+- [ ] URL param prefixing (allow multiple tables on same page)
 
 ## Howto
 
@@ -46,9 +50,9 @@ create a component like:
       React.createElement(RTable, {
         dataUrl: '/api/data/',
         columns: [
-          {'name': '#', 'key': 'id'},
-          {'name': 'Name', 'key': 'foo'},
-          {'name': 'Hometown', 'key': 'bar'},
+          {'label': '#', 'key': 'id'},
+          {'label': 'Name', 'key': 'foo'},
+          {'label': 'Hometown', 'key': 'bar'},
         ],
       }),
       document.getElementById('container')

@@ -16,13 +16,13 @@
       React.createElement(RTable, {
         dataUrl: '/api/data/',
         columns: [
-          {'name': '#', 'key': 'amount'},
-          {'name': 'Name', 'key': 'foo'},
-          {'name': 'Favourite colour', 'key': 'bar'},
+          {'label': '#', 'name': 'amount'},
+          {'label': 'Name', 'name': 'foo'},
+          {'label': 'Favourite colour', 'name': 'bar'},
         ],
         filters: [
-          {'name': 'Name', 'key': 'foo'},
-          {'name': 'Colour', 'key': 'bar', 'choices': [
+          {'label': 'Name', 'name': 'foo'},
+          {'label': 'Colour', 'name': 'bar', 'choices': [
             {'label': 'Beige', 'value': 'beige'},
             {'label': 'Blue', 'value': 'blue'},
             {'label': 'Green', 'value': 'green'},
