@@ -5,14 +5,16 @@ Easy AJAX tables designed for use with Django Rest Framework, powered by React
 ## Features
 
 - [x] Columns
-- [ ] Pagination
-- [ ] Sorting
+- [x] Pagination
+- [x] Sorting
 - [ ] Filtering
-- [ ] Window history
+- [x] Window history
 - [ ] Themes (custom markup)
 
-Misc todos:
+Misc todos for the future:
 
+- [ ] Multi-sorting
+- [ ] Advanced pagination
 - [ ] Column identity
 
 ## Howto
@@ -22,6 +24,7 @@ Misc todos:
 Given an AJAX endpoint `/api/data/` that returns a json:
 
     {
+      ""
       "results": [
         {
           foo: "Xmwpxktj",
@@ -50,3 +53,7 @@ create a component like:
       }),
       document.getElementById('container')
     );
+
+### Customisation
+
+### Other data sources

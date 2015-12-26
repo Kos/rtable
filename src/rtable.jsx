@@ -31,12 +31,16 @@ class RTable extends React.Component {
       <table className="table table-striped table-hover">
         <thead>
           <tr><td className="text-center" colSpan={this.props.columns.length}>
-            {this.state.hasPrev ? <a className="btn btn-primary" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a> : null}
+            {this.state.hasPrev
+              ? <a className="btn btn-primary" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a>
+              : <button className="btn btn-primary" disabled>prev</button> }
             {' '}
             page {this.state.page} of {this.state.pages},
             results {this.state.firstResult}-{this.state.lastResult} of {this.state.count}
             {' '}
-            {this.state.hasNext ? <a className="btn btn-primary" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a> : null}
+            {this.state.hasNext
+              ? <a className="btn btn-primary" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
+              : <button className="btn btn-primary" disabled>next</button> }
           </td></tr>
           <tr>{header}</tr>
         </thead>
@@ -84,7 +88,6 @@ class DataLoader {
       response.nextQuery = UpdateQueryString('page', response.page+1, response.query);
       response.prevQuery = UpdateQueryString('page', response.page-1, response.query);
       response.ordering = urlParams.ordering || null;
-      // response.prevQuery = !!response.next;
       if (response.next) {
         let pageSize = response.results.length;
         response.pages = divideRoundUp(response.count, pageSize);
