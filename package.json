@@ -1,0 +1,28 @@
+{
+  "name": "rtable",
+  "version": "0.0.0",
+  "description": "AJAX-powered table / data grid, powered by React and inspired by JQGrid.",
+  "scripts": {
+    "test": "./node_modules/.bin/karma start --single-run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kos/rtable.git"
+  },
+  "author": "Tomasz Wesołowski <kosashi@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kos/rtable/issues"
+  },
+  "homepage": "https://github.com/Kos/rtable#readme",
+  "devDependencies": {
+    "jasmine-core": "^2.4.1",
+    "karma": "^0.13.16",
+    "karma-babel-preprocessor": "^6.0.1",
+    "karma-chrome-launcher": "^0.2.2",
+    "karma-firefox-launcher": "^0.1.7",
+    "karma-jasmine": "^0.3.6",
+    "karma-sinon": "^1.0.4",
+    "sinon": "^1.17.2"
+  }
+}

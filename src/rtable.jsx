@@ -11,8 +11,8 @@ class RTable extends React.Component {
     this.loader.loadInitial();
   }
   render() {
-    let filters = this.props.filters;
-    let columns = this.props.columns;
+    let filters = this.props.filters || [];
+    let columns = this.props.columns || [];
     let header = columns.map((col, n) =>
       <th key={n} onClick={this.loader.fn.orderToggle(col.name)}>
         {col.label}
@@ -34,15 +34,15 @@ class RTable extends React.Component {
         <thead>
           <tr><td className="text-center" colSpan={columns.length}>
             {this.state.hasPrev
-              ? <a className="btn btn-primary" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a>
-              : <button className="btn btn-primary" disabled>prev</button> }
+              ? <a className="btn btn-primary t-prev" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a>
+              : <button className="btn btn-primary t-prev" disabled>prev</button> }
             {' '}
             page {this.state.page} of {this.state.pages},
             results {this.state.firstResult}-{this.state.lastResult} of {this.state.count}
             {' '}
             {this.state.hasNext
-              ? <a className="btn btn-primary" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
-              : <button className="btn btn-primary" disabled>next</button> }
+              ? <a className="btn btn-primary t-next" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
+              : <button className="btn btn-primary t-next" disabled>next</button> }
           </td></tr>
           <tr><td className="form-inline" colSpan={columns.length}>
             {filters.map((filter, i) =>
@@ -89,9 +89,16 @@ class DataLoader {
     }
   }
   loadInitial() {
-    let page = parseUri(window.location).queryKey.page || 1;
-    let url = UpdateQueryString('page', page, this.baseUrl);
+    let data = parseUri(this.getWindowLocation()).queryKey;
+    data.page = data.page || "1";
+    let url = this.baseUrl;
+    for (let k in data) if (data.hasOwnProperty(k)) {
+      url = UpdateQueryString(k, data[k], url);
+    }
     this.load(url);
+  }
+  getWindowLocation() {
+    return window.location;
   }
   currentState() {
     return this.component.state;
@@ -104,7 +111,7 @@ class DataLoader {
     .then(response => {
       // have: count, next, previous, results
       response.fullUrl = url;
-      response.query = '?' + parsedUrl.query;
+      response.query = '?' + parsedUrl.query; // TODO drop? use consistently?
       response.page = parseInt(urlParams.page) || 1;
       response.page0 = response.page - 1;
       response.hasNext = !!response.next;
@@ -130,7 +137,7 @@ class DataLoader {
     if (event.ctrlKey || event.altKey || event.shiftKey) return;
     event.preventDefault();
     let newDataUrl = UpdateQueryString('page', page, this.currentState().fullUrl);
-    let newWindowUrl = UpdateQueryString('page', page);
+    let newWindowUrl = UpdateQueryString('page', page, window.location.href);
     if (window.history.replaceState) {
       window.history.replaceState({}, '', newWindowUrl);
     }
@@ -146,7 +153,7 @@ class DataLoader {
     if (event.ctrlKey || event.altKey || event.shiftKey) return;
     event.preventDefault();
     let newDataUrl = UpdateQueryString('ordering', ordering, this.currentState().fullUrl);
-    let newWindowUrl = UpdateQueryString('ordering', ordering);
+    let newWindowUrl = UpdateQueryString('ordering', ordering, window.location.href);
     if (window.history.replaceState) {
       window.history.replaceState({}, '', newWindowUrl);
     }
@@ -168,7 +175,7 @@ class DataLoader {
   filter(event, key) {
     let newFilterValue = event.target.value || null;
     let newDataUrl = UpdateQueryString(key, newFilterValue, this.currentState().fullUrl);
-    let newWindowUrl = UpdateQueryString(key, newFilterValue);
+    let newWindowUrl = UpdateQueryString(key, newFilterValue, window.location.href);
     if (window.history.replaceState) {
       window.history.replaceState({}, '', newWindowUrl);
     }
@@ -248,7 +255,6 @@ parseUri.options = {
 
 // http://stackoverflow.com/a/11654596/399317
 function UpdateQueryString(key, value, url) {
-  if (!url) url = window.location.href;
   var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
   var hash;
 

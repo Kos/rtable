@@ -35,8 +35,8 @@ var RTable = (function (_React$Component) {
     value: function render() {
       var _this2 = this;
 
-      var filters = this.props.filters;
-      var columns = this.props.columns;
+      var filters = this.props.filters || [];
+      var columns = this.props.columns || [];
       var header = columns.map(function (col, n) {
         return React.createElement(
           "th",
@@ -74,11 +74,11 @@ var RTable = (function (_React$Component) {
               { className: "text-center", colSpan: columns.length },
               this.state.hasPrev ? React.createElement(
                 "a",
-                { className: "btn btn-primary", href: this.state.prevQuery, onClick: this.loader.fn.prevPage },
+                { className: "btn btn-primary t-prev", href: this.state.prevQuery, onClick: this.loader.fn.prevPage },
                 "prev"
               ) : React.createElement(
                 "button",
-                { className: "btn btn-primary", disabled: true },
+                { className: "btn btn-primary t-prev", disabled: true },
                 "prev"
               ),
               ' ',
@@ -95,11 +95,11 @@ var RTable = (function (_React$Component) {
               ' ',
               this.state.hasNext ? React.createElement(
                 "a",
-                { className: "btn btn-primary", href: this.state.nextQuery, onClick: this.loader.fn.nextPage },
+                { className: "btn btn-primary t-next", href: this.state.nextQuery, onClick: this.loader.fn.nextPage },
                 "next"
               ) : React.createElement(
                 "button",
-                { className: "btn btn-primary", disabled: true },
+                { className: "btn btn-primary t-next", disabled: true },
                 "next"
               )
             )
@@ -193,9 +193,19 @@ var DataLoader = (function () {
   _createClass(DataLoader, [{
     key: "loadInitial",
     value: function loadInitial() {
-      var page = parseUri(window.location).queryKey.page || 1;
-      var url = UpdateQueryString('page', page, this.baseUrl);
-      this.load(url);
+      var data = parseUri(this.getWindowLocation()).queryKey;
+      data.page = data.page || "1";
+      var url = this.baseUrl;
+      for (var k in data) {
+        if (data.hasOwnProperty(k)) {
+          url = UpdateQueryString(k, data[k], url);
+        }
+      }this.load(url);
+    }
+  }, {
+    key: "getWindowLocation",
+    value: function getWindowLocation() {
+      return window.location;
     }
   }, {
     key: "currentState",
@@ -215,7 +225,7 @@ var DataLoader = (function () {
       return getJson(url).then(function (response) {
         // have: count, next, previous, results
         response.fullUrl = url;
-        response.query = '?' + parsedUrl.query;
+        response.query = '?' + parsedUrl.query; // TODO drop? use consistently?
         response.page = parseInt(urlParams.page) || 1;
         response.page0 = response.page - 1;
         response.hasNext = !!response.next;
@@ -243,7 +253,7 @@ var DataLoader = (function () {
       if (event.ctrlKey || event.altKey || event.shiftKey) return;
       event.preventDefault();
       var newDataUrl = UpdateQueryString('page', page, this.currentState().fullUrl);
-      var newWindowUrl = UpdateQueryString('page', page);
+      var newWindowUrl = UpdateQueryString('page', page, window.location.href);
       if (window.history.replaceState) {
         window.history.replaceState({}, '', newWindowUrl);
       }
@@ -265,7 +275,7 @@ var DataLoader = (function () {
       if (event.ctrlKey || event.altKey || event.shiftKey) return;
       event.preventDefault();
       var newDataUrl = UpdateQueryString('ordering', ordering, this.currentState().fullUrl);
-      var newWindowUrl = UpdateQueryString('ordering', ordering);
+      var newWindowUrl = UpdateQueryString('ordering', ordering, window.location.href);
       if (window.history.replaceState) {
         window.history.replaceState({}, '', newWindowUrl);
       }
@@ -291,7 +301,7 @@ var DataLoader = (function () {
     value: function filter(event, key) {
       var newFilterValue = event.target.value || null;
       var newDataUrl = UpdateQueryString(key, newFilterValue, this.currentState().fullUrl);
-      var newWindowUrl = UpdateQueryString(key, newFilterValue);
+      var newWindowUrl = UpdateQueryString(key, newFilterValue, window.location.href);
       if (window.history.replaceState) {
         window.history.replaceState({}, '', newWindowUrl);
       }
@@ -375,7 +385,6 @@ parseUri.options = {
 
 // http://stackoverflow.com/a/11654596/399317
 function UpdateQueryString(key, value, url) {
-  if (!url) url = window.location.href;
   var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
   var hash;
 

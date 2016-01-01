@@ -33,6 +33,7 @@
   },
   "env": {
     "browser": true,
-    "jquery": true
+    "jquery": true,
+    "jasmine": true
   },
 }

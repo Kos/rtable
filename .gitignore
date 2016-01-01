@@ -1,2 +1,3 @@
 testApp/db.sqlite3
 testApp/env
+node_modules
