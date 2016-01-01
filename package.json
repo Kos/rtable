@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "description": "AJAX-powered table / data grid, powered by React and inspired by JQGrid.",
   "scripts": {
-    "test": "./node_modules/.bin/karma start --single-run"
+    "test": "karma start --single-run",
+    "build": "babel src -d dist",
+    "watch": "babel -w src -d dist"
   },
   "repository": {
     "type": "git",
@@ -16,6 +18,7 @@
   },
   "homepage": "https://github.com/Kos/rtable#readme",
   "devDependencies": {
+    "babel-cli": "^6.3.17",
     "jasmine-core": "^2.4.1",
     "karma": "^0.13.16",
     "karma-babel-preprocessor": "^6.0.1",
