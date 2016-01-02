@@ -49,7 +49,32 @@ describe("RTable", function() {
         }, 1);
       }, 1);
     });
-    it("should sort");
+    it("should sort", function(done) {
+      UI.create({"columns": [{"name": "foo", "label": "Foo"}]});
+      expect(this.requests[0].url).toEqual('/api?page=1');
+      this.requests[0].respond(200, {}, JSON.stringify({
+        count: 10, next: "/api?page=2", previous: null, results: rows(5)
+      }));
+      // HACK: wait for `.respond()`'s promise to resolve
+      setTimeout(() => {
+        UI.orderByIndex(0);
+        setTimeout(() => {
+          // HACK: wait for new Promise() in getJson() to actually fire the request... deja vu
+          expect(this.requests[1].url).toEqual('/api?page=1&ordering=foo');
+          this.requests[1].respond(200, {}, JSON.stringify({
+            count: 10, next: "/api?page=2&ordering=foo", previous: null, results: rows(5)
+          }));
+          setTimeout(() => {
+            UI.orderByIndex(0);
+            setTimeout(() => {
+              expect(this.requests[2].url).toEqual('/api?page=1&ordering=-foo');
+              done();
+            }, 1);
+          }, 1);
+        }, 1);
+      });
+
+    });
     it("should filter selects immediately");
     it("should filter inputs with a delay");
   });
@@ -69,6 +94,11 @@ let UI = {
 
   nextPage() {
     let elem = document.querySelector("#container .t-next");
+    ReactTestUtils.Simulate.click(elem);
+  },
+
+  orderByIndex(index) {
+    let elem = document.querySelectorAll("#container thead th")[index];
     ReactTestUtils.Simulate.click(elem);
   }
 };
