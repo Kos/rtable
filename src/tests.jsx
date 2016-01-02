@@ -36,44 +36,33 @@ describe("RTable", function() {
     it("should paginate", function(done) {
       UI.create({"columns": [{"name": "foo"}]});
       expect(this.requests[0].url).toEqual('/api?page=1');
-      this.requests[0].respond(200, {}, JSON.stringify({
+      respondJsonAndWait(this.requests[0], 200, {
         count: 10, next: "/api?page=2", previous: null, results: rows(5)
-      }));
-      // HACK: wait for `.respond()`'s promise to resolve... there HAS to be a better way
-      setTimeout(() => {
-        UI.nextPage();
-        // HACK: wait for new Promise() in getJson() to actually fire the request... deja vu
-        setTimeout(() => {
-          expect(this.requests[1].url).toEqual('/api?page=2');
-          done();
-        }, 1);
-      }, 1);
+      }).then(() => {
+        return UI.nextPage();
+      }).then(() => {
+        expect(this.requests[1].url).toEqual('/api?page=2');
+        done();
+      });
     });
     it("should sort", function(done) {
       UI.create({"columns": [{"name": "foo", "label": "Foo"}]});
       expect(this.requests[0].url).toEqual('/api?page=1');
-      this.requests[0].respond(200, {}, JSON.stringify({
+      respondJsonAndWait(this.requests[0], 200, {
         count: 10, next: "/api?page=2", previous: null, results: rows(5)
-      }));
-      // HACK: wait for `.respond()`'s promise to resolve
-      setTimeout(() => {
-        UI.orderByIndex(0);
-        setTimeout(() => {
-          // HACK: wait for new Promise() in getJson() to actually fire the request... deja vu
-          expect(this.requests[1].url).toEqual('/api?page=1&ordering=foo');
-          this.requests[1].respond(200, {}, JSON.stringify({
-            count: 10, next: "/api?page=2&ordering=foo", previous: null, results: rows(5)
-          }));
-          setTimeout(() => {
-            UI.orderByIndex(0);
-            setTimeout(() => {
-              expect(this.requests[2].url).toEqual('/api?page=1&ordering=-foo');
-              done();
-            }, 1);
-          }, 1);
-        }, 1);
+      }).then(() => {
+        return UI.orderByIndex(0);
+      }).then(() => {
+        expect(this.requests[1].url).toEqual('/api?page=1&ordering=foo');
+        return respondJsonAndWait(this.requests[1], 200, {
+          count: 10, next: "/api?page=2&ordering=foo", previous: null, results: rows(5)
+        });
+      }).then(() => {
+        return UI.orderByIndex(0);
+      }).then(() => {
+        expect(this.requests[2].url).toEqual('/api?page=1&ordering=-foo');
+        done();
       });
-
     });
     it("should filter selects immediately");
     it("should filter inputs with a delay");
@@ -95,11 +84,13 @@ let UI = {
   nextPage() {
     let elem = document.querySelector("#container .t-next");
     ReactTestUtils.Simulate.click(elem);
+    return later(); // HACK: wait for new Promise() in getJson() to actually fire the request
   },
 
   orderByIndex(index) {
     let elem = document.querySelectorAll("#container thead th")[index];
     ReactTestUtils.Simulate.click(elem);
+    return later(); // HACK: wait for new Promise() in getJson() to actually fire the request
   }
 };
 
@@ -109,4 +100,15 @@ function rows(n) {
     x.push({"foo": i});
   }
   return x;
+}
+
+function respondJsonAndWait(request, status, data) {
+  request.respond(status, {}, JSON.stringify(data));
+  return later(); // HACK: wait for `.respond()`'s promise to resolve
+}
+
+function later() {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, 1);
+  });
 }
