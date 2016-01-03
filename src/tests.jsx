@@ -1,6 +1,5 @@
 /* global React, ReactDOM */
 /* global RTable */
-/* global sinon */
 
 let ReactTestUtils = React.addons.TestUtils;
 
@@ -14,55 +13,48 @@ describe("RTable", function() {
     d = document.createElement('div');
     d.id = 'container';
     document.body.insertBefore(d, document.body.children[0]);
-
-    this.sinon_xhr = sinon.useFakeXMLHttpRequest();
-    this.sinon_xhr.onCreate = xhr => this.requests.push(xhr);
     this.requests = [];
-  })
-  afterEach(function() {
-    this.sinon_xhr.restore();
-  })
+    spyOn(window, 'getJson').and.callFake(url => {
+      const promise = new MockPromise();
+      this.requests.push({
+        url, promise,
+        respond: function(data) { this.promise.resolveNow(data); }
+      });
+      return promise;
+    })
+
+  });
   describe("interactivity", function() {
     it("should download initial data", function() {
       UI.create({});
-      expect(this.requests[0].method).toEqual('GET');
       expect(this.requests[0].url).toEqual('/api?page=1'); // drop 1?
     });
     it("should take data from window url", function() {
       UI.create({}, "?page=3&foo=bar");
-      expect(this.requests[0].method).toEqual('GET');
       expect(this.requests[0].url).toEqual('/api?page=3&foo=bar'); // ?
     });
-    it("should paginate", function(done) {
+    it("should paginate", function() {
       UI.create({"columns": [{"name": "foo"}]});
       expect(this.requests[0].url).toEqual('/api?page=1');
-      respondJsonAndWait(this.requests[0], 200, {
+      this.requests[0].respond({
         count: 10, next: "/api?page=2", previous: null, results: rows(5)
-      }).then(() => {
-        return UI.nextPage();
-      }).then(() => {
-        expect(this.requests[1].url).toEqual('/api?page=2');
-        done();
       });
+      UI.nextPage();
+      expect(this.requests[1].url).toEqual('/api?page=2');
     });
-    it("should sort", function(done) {
+    it("should sort", function() {
       UI.create({"columns": [{"name": "foo", "label": "Foo"}]});
       expect(this.requests[0].url).toEqual('/api?page=1');
-      respondJsonAndWait(this.requests[0], 200, {
+      this.requests[0].respond({
         count: 10, next: "/api?page=2", previous: null, results: rows(5)
-      }).then(() => {
-        return UI.orderByIndex(0);
-      }).then(() => {
-        expect(this.requests[1].url).toEqual('/api?page=1&ordering=foo');
-        return respondJsonAndWait(this.requests[1], 200, {
-          count: 10, next: "/api?page=2&ordering=foo", previous: null, results: rows(5)
-        });
-      }).then(() => {
-        return UI.orderByIndex(0);
-      }).then(() => {
-        expect(this.requests[2].url).toEqual('/api?page=1&ordering=-foo');
-        done();
       });
+      UI.orderByIndex(0);
+      expect(this.requests[1].url).toEqual('/api?page=1&ordering=foo');
+      this.requests[1].respond({
+        count: 10, next: "/api?page=2&ordering=foo", previous: null, results: rows(5)
+      });
+      UI.orderByIndex(0);
+      expect(this.requests[2].url).toEqual('/api?page=1&ordering=-foo');
     });
     it("should filter selects immediately");
     it("should filter inputs with a delay");
@@ -111,4 +103,28 @@ function later() {
   return new Promise((resolve, reject) => {
     setTimeout(resolve, 1);
   });
+}
+
+class MockPromise {
+  constructor() {
+    this.callbacks = {onFulfilled: [], onRejected: []};
+  }
+
+  then(onFulfilled, onRejected) {
+    if (typeof onFulfilled === 'function') {
+      this.callbacks.onFulfilled.push(onFulfilled);
+    }
+    if (typeof onRejected === 'function') {
+      this.callbacks.onRejected.push(onRejected);
+    }
+
+  }
+  // This would normally happen when the stack is exhausted.
+  // MockPromise requires the caller to trigger that manually
+  resolveNow(value) {
+    this.callbacks.onFulfilled.forEach(cb => cb(value));
+  }
+  rejectNow(reason) {
+    this.callbacks.onRejected.forEach(cb => cb(reason));
+  }
 }
