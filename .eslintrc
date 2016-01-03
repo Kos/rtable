@@ -28,8 +28,9 @@
     "octalLiterals": false,
   },
   "rules": {
-    "no-console": [0],
-    "no-unused-vars": [2, {"vars": "local", "args": "none"}]
+    "no-unused-vars": [2, {"vars": "local", "args": "none"}],
+    "indent": [2, 2],
+    "semi": [2, "always"]
   },
   "env": {
     "browser": true,

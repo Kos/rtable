@@ -86,7 +86,7 @@ class DataLoader {
       orderToggle: column => (event => this.orderToggle(event, column)),
       filter: key => (event => this.filter(event, key)),
       filterDelayed: key => delayed(this.filterDelay, event => this.filter(event, key))
-    }
+    };
   }
   loadInitial() {
     let data = parseUri(this.getWindowLocation()).queryKey;
@@ -215,7 +215,7 @@ function delayed(delay, fn) {
       clearTimeout(timeout);
     }
     timeout = setTimeout(() => fn.apply(null, arguments), delay);
-  }
+  };
 }
 
 

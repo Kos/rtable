@@ -21,9 +21,9 @@ describe("RTable", function() {
         respond: function(data) { this.promise.resolveNow(data); }
       });
       return promise;
-    })
-
+    });
   });
+
   describe("interactivity", function() {
     it("should download initial data", function() {
       UI.create({});
@@ -59,10 +59,10 @@ describe("RTable", function() {
     it("should filter selects immediately");
     it("should filter inputs with a delay");
   });
-  describe("rendering", function() {
 
+  describe("rendering", function() {
   });
-})
+});
 
 let UI = {
   create(props, qs="") {
