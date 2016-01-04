@@ -56,7 +56,21 @@ describe("RTable", function() {
       UI.orderByIndex(0);
       expect(this.requests[2].url).toEqual('/api?page=1&ordering=-foo');
     });
-    it("should filter selects immediately");
+    it("should filter selects immediately", function() {
+      UI.create({"columns": [{"name": "foo", "label": "Foo"}],
+                 "filters": [{"name": "foo", "label": "Foofilter", "choices": [
+                   {"label": "---", "value": "choice"},
+                   {"label": "ChoiceA", "value": "choice-a"},
+                   {"label": "ChoiceB", "value": "choice-b"}
+                 ]}]});
+      expect(this.requests[0].url).toEqual('/api?page=1');
+      this.requests[0].respond({
+        count: 10, next: "/api?page=2", previous: null, results: rows(5)
+      });
+      UI.filterSelectByIndex(0, "choice-b");
+      expect(this.requests[1].url).toEqual('/api?page=1&foo=choice-b');
+    });
+    it("should filter selects with value=null");
     it("should filter inputs with a delay");
   });
 
@@ -83,7 +97,14 @@ let UI = {
     let elem = document.querySelectorAll("#container thead th")[index];
     ReactTestUtils.Simulate.click(elem);
     return later(); // HACK: wait for new Promise() in getJson() to actually fire the request
+  },
+
+  filterSelectByIndex(index, value) {
+    let elem = document.querySelectorAll('#container thead select')[index];
+    elem.value = value;
+    ReactTestUtils.Simulate.input(elem);
   }
+
 };
 
 function rows(n) {
