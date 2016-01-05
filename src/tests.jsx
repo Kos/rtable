@@ -1,5 +1,6 @@
 /* global React, ReactDOM */
 /* global RTable */
+/* global sinon */
 
 let ReactTestUtils = React.addons.TestUtils;
 
@@ -25,6 +26,13 @@ describe("RTable", function() {
   });
 
   describe("interactivity", function() {
+    beforeEach(function() {
+      this.clock = sinon.useFakeTimers();
+    });
+    afterEach(function() {
+      this.clock.restore();
+    });
+
     it("should download initial data", function() {
       UI.create({});
       expect(this.requests[0].url).toEqual('/api?page=1'); // drop 1?
@@ -67,11 +75,25 @@ describe("RTable", function() {
       this.requests[0].respond({
         count: 10, next: "/api?page=2", previous: null, results: rows(5)
       });
-      UI.filterSelectByIndex(0, "choice-b");
+      UI.filterByIndex('select', 0, "choice-b");
       expect(this.requests[1].url).toEqual('/api?page=1&foo=choice-b');
     });
     it("should filter selects with value=null");
-    it("should filter inputs with a delay");
+    it("should filter inputs with a delay", function() {
+      UI.create({"columns": [{"name": "foo", "label": "Foo"}],
+                 "filters": [{"name": "baz", "label": "Foofilter"}]});
+      expect(this.requests[0].url).toEqual('/api?page=1');
+      this.requests[0].respond({
+        count: 10, next: "/api?page=2", previous: null, results: rows(5)
+      });
+      UI.filterByIndex('input', 0, "quux");
+      expect(this.requests.length).toEqual(1);
+      this.clock.tick(799);
+      expect(this.requests.length).toEqual(1);
+      this.clock.tick(1);
+      expect(this.requests.length).toEqual(2);
+      expect(this.requests[1].url).toEqual('/api?page=1&baz=quux');
+    });
   });
 
   describe("rendering", function() {
@@ -90,21 +112,18 @@ let UI = {
   nextPage() {
     let elem = document.querySelector("#container .t-next");
     ReactTestUtils.Simulate.click(elem);
-    return later(); // HACK: wait for new Promise() in getJson() to actually fire the request
   },
 
   orderByIndex(index) {
     let elem = document.querySelectorAll("#container thead th")[index];
     ReactTestUtils.Simulate.click(elem);
-    return later(); // HACK: wait for new Promise() in getJson() to actually fire the request
   },
 
-  filterSelectByIndex(index, value) {
-    let elem = document.querySelectorAll('#container thead select')[index];
+  filterByIndex(inputSelector, index, value) {
+    let elem = document.querySelectorAll('#container thead ' + inputSelector)[index];
     elem.value = value;
     ReactTestUtils.Simulate.input(elem);
   }
-
 };
 
 function rows(n) {
@@ -113,17 +132,6 @@ function rows(n) {
     x.push({"foo": i});
   }
   return x;
-}
-
-function respondJsonAndWait(request, status, data) {
-  request.respond(status, {}, JSON.stringify(data));
-  return later(); // HACK: wait for `.respond()`'s promise to resolve
-}
-
-function later() {
-  return new Promise((resolve, reject) => {
-    setTimeout(resolve, 1);
-  });
 }
 
 class MockPromise {
