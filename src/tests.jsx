@@ -97,10 +97,20 @@ describe("RTable", function() {
   });
 
   describe("rendering", function() {
+    fit("should render", function() {
+      let props = {
+        dataUrl: "/api",
+        columns: []
+      };
+      let rtable = ReactTestUtils.renderIntoDocument(<RTable {...props} /> );
+      expect(rtable.refs.columnHeaderRow.children.length).toEqual(0);
+      expect(rtable.refs.rowContainer.children.length).toEqual(0);
+    });
   });
 });
 
 let UI = {
+  // TODO https://www.npmjs.com/package/jasmine-react ?
   create(props, qs="") {
     props.dataUrl = props.dataUrl || "/api";
     let location = props.dataUrl + qs;

@@ -44,7 +44,7 @@ class RTable extends React.Component {
               ? <a className="btn btn-primary t-next" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
               : <button className="btn btn-primary t-next" disabled>next</button> }
           </td></tr>
-          <tr><td className="form-inline" colSpan={columns.length}>
+          <tr ref="filterRow"><td className="form-inline" colSpan={columns.length}>
             {filters.map((filter, i) =>
               <span key={i}>
                 <label>
@@ -63,9 +63,9 @@ class RTable extends React.Component {
               </span>
             )}
           </td></tr>
-          <tr>{header}</tr>
+          <tr ref="columnHeaderRow">{header}</tr>
         </thead>
-        <tbody>
+        <tbody ref="rowContainer">
           {rows}
         </tbody>
       </table>

@@ -106,7 +106,7 @@ var RTable = (function (_React$Component) {
           ),
           React.createElement(
             "tr",
-            null,
+            { ref: "filterRow" },
             React.createElement(
               "td",
               { className: "form-inline", colSpan: columns.length },
@@ -138,13 +138,13 @@ var RTable = (function (_React$Component) {
           ),
           React.createElement(
             "tr",
-            null,
+            { ref: "columnHeaderRow" },
             header
           )
         ),
         React.createElement(
           "tbody",
-          null,
+          { ref: "rowContainer" },
           rows
         )
       );
