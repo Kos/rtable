@@ -1,17 +1,21 @@
 <!doctype html>
 <html>
   <head>
-    <title>RTable example</title>
+    <title>RTable demo</title>
     <link rel="stylesheet" href="testApp/static/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="testApp/static/bootstrap/css/bootstrap-theme.min.css">
   </head>
   <body>
-    <p>We're not done yet!</p>
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="testApp/static/react/react-with-addons.js"></script>
     <script src="testApp/static/react/react-dom.js"></script>
     <script src="dist/rtable.js"></script>
-    <div id="react-container" class="container"></div>
+    <div class="container">
+      <h1><a href="https://github.com/Kos/rtable">RTable</a> demo</h1>
+      <p>Uses Github API as the example data source.</p>
+      <p>We're not done yet!</p>
+      <div id="react-container"</div>
+    </div>
     <script>
     window.getJson = function(url) {
       // ha ha, this will have to do until we have proper non-Django Rest Framework
