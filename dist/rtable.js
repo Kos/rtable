@@ -31,6 +31,14 @@ var RTable = (function (_React$Component) {
       this.loader.loadInitial();
     }
   }, {
+    key: "getValue",
+    value: function getValue(row, col) {
+      if (col.get) {
+        return col.get(row);
+      }
+      return row[col.name];
+    }
+  }, {
     key: "render",
     value: function render() {
       var _this2 = this;
@@ -50,7 +58,7 @@ var RTable = (function (_React$Component) {
           return React.createElement(
             "td",
             { key: n },
-            row[col.name]
+            _this2.getValue(row, col)
           );
         });
         return React.createElement(
@@ -127,7 +135,7 @@ var RTable = (function (_React$Component) {
                       return React.createElement(
                         "option",
                         { key: j, value: choice.value },
-                        choice.label
+                        choice.label || choice.value
                       );
                     })
                   ) : React.createElement("input", { className: "form-control input-sm", onInput: _this2.loader.fn.filterDelayed(filter.name) }),

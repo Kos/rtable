@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head>
+    <title>RTable example</title>
+    <base href="testApp/static/">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
+  </head>
+  <body>
+    <p>We're not done yet!</p>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="react/react-with-addons.js"></script>
+    <script src="react/react-dom.js"></script>
+    <script src="rtable.js"></script>
+    <div id="react-container" class="container"></div>
+    <script>
+    window.getJson = function(url) {
+      // ha ha, this will have to do until we have proper non-Django Rest Framework
+      // data source support
+      return $.get(url)
+      .then(function(data, status, jqXHR) {
+        var data = {
+          "count": 999, // TODO: make count optional
+          "next": null,
+          "previous": null,
+          "results": data
+        };
+        // Read Link headers, populate "next" and "previous"
+        var links = (jqXHR.getResponseHeader('Link') || "").split(',');
+        links.forEach(function(link) {
+          groups = /<([^>]*)>; rel=.(\w+)./.exec(link);
+          if (!groups) return;
+          if (groups[2] === "next") {
+            data.next = groups[1];
+          } else if (groups[2] === "prev") {
+            data.previous = groups[1];
+          }
+        });
+        return data;
+      });
+    };
+
+    function pre(str) {
+      return React.createElement('pre', { style: { 'whiteSpace': 'pre-wrap' }}, str);
+    }
+    function img(src, width) {
+      return React.createElement("img", { src: src, width: width });
+    }
+
+    ReactDOM.render(
+      React.createElement(RTable, {
+        dataUrl: 'https://api.github.com/repos/tomchristie/django-rest-framework/commits?per_page=10',
+        columns: [
+          {name: "author_avatar", label: "", get: function(commit) { return commit.author ? img(commit.author.avatar_url, 48) : ''; }},
+          {name: "author", label: "Author", get: function(commit) { return commit.commit.author.name; }},
+          {name: "sha", label: "#"},
+          {name: "msg", label: "Message", get: function(commit) { return pre(commit.commit.message); }},
+        ],
+        filters: [
+          {'label': 'Path', 'name': 'path'},
+          {'label': 'Version', 'name': 'sha', 'choices': [
+            {value: 'master'},
+            {value: 'gh-pages'},
+            {value: '3.3.2'},
+            {value: '3.3.1'},
+            {value: '3.3.0'},
+            {value: '3.2.5'},
+            {value: '3.2.3'},
+          ]},
+        ]
+      }),
+      document.getElementById('react-container')
+    );
+
+    </script>
+  </body>
+</html>

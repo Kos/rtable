@@ -10,6 +10,12 @@ class RTable extends React.Component {
   componentDidMount() {
     this.loader.loadInitial();
   }
+  getValue(row, col) {
+    if (col.get) {
+      return col.get(row);
+    }
+    return row[col.name];
+  }
   render() {
     let filters = this.props.filters || [];
     let columns = this.props.columns || [];
@@ -24,7 +30,7 @@ class RTable extends React.Component {
     );
     let rows = this.state.results.map((row, m) => {
       let cells = this.props.columns.map((col, n) =>
-        <td key={n}>{row[col.name]}</td>
+        <td key={n}>{this.getValue(row, col)}</td>
       );
       return <tr key={m}>{cells}</tr>;
     });
@@ -54,7 +60,7 @@ class RTable extends React.Component {
                 {filter.choices
                   ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.name)}>
                       {filter.choices.map((choice, j) =>
-                        <option key={j} value={choice.value}>{choice.label}</option>
+                        <option key={j} value={choice.value}>{choice.label || choice.value}</option>
                       )}
                     </select>
                   : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.name)}/>
