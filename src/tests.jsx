@@ -97,14 +97,45 @@ describe("RTable", function() {
   });
 
   describe("rendering", function() {
-    fit("should render", function() {
-      let props = {
-        dataUrl: "/api",
-        columns: []
+    beforeEach(function() {
+      this.renderWithData = function({props, results}) {
+        let rtable = ReactTestUtils.renderIntoDocument(<RTable {...props} /> );
+        this.requests[0].respond({'count': results.length,
+                                  'next': null, 'previous': null,
+                                  'results': results});
+        return rtable;
       };
-      let rtable = ReactTestUtils.renderIntoDocument(<RTable {...props} /> );
+    });
+    it("should render", function() {
+      let rtable = this.renderWithData({
+        props: {
+          dataUrl: "/api",
+          columns: []
+        },
+        results: []
+      });
       expect(rtable.refs.columnHeaderRow.children.length).toEqual(0);
       expect(rtable.refs.rowContainer.children.length).toEqual(0);
+    });
+    it("should render row values", function() {
+      let rtable = this.renderWithData({
+        props: {
+          dataUrl: "/api",
+          columns: [
+            {'name': 'exampleColumn', 'label': 'Example column'},
+            {'name': 'columnWithGetFunction', 'label': 'Column with key', 'get': () => 'getFunctionValue'}
+          ]
+        },
+        results: [{
+          'exampleColumn': 'exampleValue',
+          'anotherColumn': 'anotherValue'
+        }]
+      });
+      expect(rtable.refs.rowContainer.children.length).toEqual(1);
+      let row = rtable.refs.rowContainer.children[0];
+      expect(row.children.length).toEqual(2);
+      expect(row.children[0].textContent).toEqual('exampleValue');
+      expect(row.children[1].textContent).toEqual('getFunctionValue');
     });
   });
 });
