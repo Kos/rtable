@@ -49,7 +49,7 @@ var RTable = (function (_React$Component) {
         return React.createElement(
           "th",
           { key: n, onClick: _this2.loader.fn.orderToggle(col.name) },
-          col.label,
+          col.label || col.name,
           _this2.state.ordering == col.name ? "▲" : _this2.state.ordering == "-" + col.name ? "▼" : null
         );
       });
