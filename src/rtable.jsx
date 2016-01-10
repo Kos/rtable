@@ -21,7 +21,7 @@ class RTable extends React.Component {
     let columns = this.props.columns || [];
     let header = columns.map((col, n) =>
       <th key={n} onClick={this.loader.fn.orderToggle(col.name)}>
-        {col.label}
+        {col.label || col.name}
         {this.state.ordering == col.name ? "\u25B2" :
          this.state.ordering == "-"+col.name ? "\u25BC" :
          null

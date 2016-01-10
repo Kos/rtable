@@ -134,8 +134,28 @@ describe("RTable", function() {
       expect(rtable.refs.rowContainer.children.length).toEqual(1);
       let row = rtable.refs.rowContainer.children[0];
       expect(row.children.length).toEqual(2);
+      expect(row.children[0].tagName).toEqual('TD');
       expect(row.children[0].textContent).toEqual('exampleValue');
+      expect(row.children[1].tagName).toEqual('TD');
       expect(row.children[1].textContent).toEqual('getFunctionValue');
+    });
+    it("should render column headers", function() {
+      let rtable = this.renderWithData({
+        props: {
+          dataUrl: "/api",
+          columns: [
+            {'name': 'first', 'label': 'First column'},
+            {'name': 'second'}
+          ]
+        },
+        results: []
+      });
+      let headers = rtable.refs.columnHeaderRow.children;
+      expect(headers.length).toEqual(2);
+      expect(headers[0].tagName).toEqual('TH');
+      expect(headers[0].textContent).toEqual('First column');
+      expect(headers[1].tagName).toEqual('TH');
+      expect(headers[1].textContent).toEqual('second');
     });
   });
 });
