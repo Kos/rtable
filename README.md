@@ -69,16 +69,38 @@ create a component like:
       document.getElementById('container')
     );
 
-### Powerups
+### Columns
 
-#### Sorting
+```
+React.createElement(RTable, {
+  columns: [
+    ...
+  ]
+});
+```
+
+Each column is defined as an object with these fields:
+
+| ------- | ----------------------------------------------------------------------- |
+|  field  |                                 meaning                                 |
+| ------- | ----------------------------------------------------------------------- |
+| `name`  | Identifier name of the column                                           |
+| `label` | Optional. Pretty name of the column. Will be used in the table header.\ |
+|         | Defaults to `name`.                                                     |
+| `get`   | Optional. Function that takes a single row (as JSON) and returns\       |
+|         | the column's value. Can return a string or a React component.\          |
+|         | Defaults to `row => row[column.name]`.                                  |
+| ------- | ----------------------------------------------------------------------- |
+
+
+### Sorting
 
 ...
 
-#### Filters
+### Filters
 
 ...
 
-### Other data sources
+## Other data sources
 
 ...
