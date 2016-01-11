@@ -81,7 +81,6 @@ React.createElement(RTable, {
 
 Each column is defined as an object with these fields:
 
-| ------- | ----------------------------------------------------------------------- |
 |  field  |                                 meaning                                 |
 | ------- | ----------------------------------------------------------------------- |
 | `name`  | Identifier name of the column                                           |
@@ -90,7 +89,6 @@ Each column is defined as an object with these fields:
 | `get`   | Optional. Function that takes a single row (as JSON) and returns\       |
 |         | the column's value. Can return a string or a React component.\          |
 |         | Defaults to `row => row[column.name]`.                                  |
-| ------- | ----------------------------------------------------------------------- |
 
 
 ### Sorting
