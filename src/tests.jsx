@@ -78,7 +78,19 @@ describe("RTable", function() {
       UI.filterByIndex('select', 0, "choice-b");
       expect(this.requests[1].url).toEqual('/api?page=1&foo=choice-b');
     });
-    it("should filter selects with value=null");
+    it("should filter selects with value=null", function() {
+      UI.create({"columns": [{"name": "foo", "label": "Foo"}],
+                 "filters": [{"name": "baz", "label": "Foofilter", "choices": [
+                   {"label": "---", "value": null},
+                   {"label": "ChoiceA", "value": "choice-a"}
+                 ]}]}, "?page=1&baz=choice-a");
+      expect(this.requests[0].url).toEqual('/api?page=1&baz=choice-a');
+      this.requests[0].respond({
+        count: 10, next: "/api?page=2", previous: null, results: rows(5)
+      });
+      UI.filterByIndex('select', 0, "");
+      expect(this.requests[1].url).toEqual('/api?page=1');
+    });
     it("should filter inputs with a delay", function() {
       UI.create({"columns": [{"name": "foo", "label": "Foo"}],
                  "filters": [{"name": "baz", "label": "Foofilter"}]});
