@@ -79,14 +79,14 @@ var RTable = (function (_React$Component) {
             null,
             React.createElement(
               "td",
-              { className: "text-center", colSpan: columns.length },
+              { ref: "paginationContainer", className: "text-center", colSpan: columns.length },
               this.state.hasPrev ? React.createElement(
                 "a",
-                { className: "btn btn-primary t-prev", href: this.state.prevQuery, onClick: this.loader.fn.prevPage },
+                { ref: "paginationPrevious", className: "btn btn-primary t-prev", href: this.state.prevQuery, onClick: this.loader.fn.prevPage },
                 "prev"
               ) : React.createElement(
                 "button",
-                { className: "btn btn-primary t-prev", disabled: true },
+                { ref: "paginationPrevious", className: "btn btn-primary t-prev", disabled: true },
                 "prev"
               ),
               ' ',
@@ -103,11 +103,11 @@ var RTable = (function (_React$Component) {
               ' ',
               this.state.hasNext ? React.createElement(
                 "a",
-                { className: "btn btn-primary t-next", href: this.state.nextQuery, onClick: this.loader.fn.nextPage },
+                { ref: "paginationNext", className: "btn btn-primary t-next", href: this.state.nextQuery, onClick: this.loader.fn.nextPage },
                 "next"
               ) : React.createElement(
                 "button",
-                { className: "btn btn-primary t-next", disabled: true },
+                { ref: "paginationNext", className: "btn btn-primary t-next", disabled: true },
                 "next"
               )
             )

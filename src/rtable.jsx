@@ -38,17 +38,17 @@ class RTable extends React.Component {
     return (
       <table className="table table-striped table-hover">
         <thead>
-          <tr><td className="text-center" colSpan={columns.length}>
+          <tr><td ref="paginationContainer" className="text-center" colSpan={columns.length}>
             {this.state.hasPrev
-              ? <a className="btn btn-primary t-prev" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a>
-              : <button className="btn btn-primary t-prev" disabled>prev</button> }
+              ? <a ref="paginationPrevious" className="btn btn-primary t-prev" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a>
+              : <button ref="paginationPrevious" className="btn btn-primary t-prev" disabled>prev</button> }
             {' '}
             page {this.state.page} of {this.state.pages},
             results {this.state.firstResult}-{this.state.lastResult} of {this.state.count}
             {' '}
             {this.state.hasNext
-              ? <a className="btn btn-primary t-next" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
-              : <button className="btn btn-primary t-next" disabled>next</button> }
+              ? <a ref="paginationNext" className="btn btn-primary t-next" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
+              : <button ref="paginationNext" className="btn btn-primary t-next" disabled>next</button> }
           </td></tr>
           <tr ref="filterRow"><td className="form-inline" colSpan={columns.length}>
             {filters.map((filter, i) =>

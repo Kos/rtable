@@ -169,6 +169,35 @@ describe("RTable", function() {
       expect(headers[1].tagName).toEqual('TH');
       expect(headers[1].textContent).toEqual('second');
     });
+    it("should render classes", function() {
+      // TODO opt-in configurable class names, don't just default to Boostrap
+      let rtable = this.renderWithData({
+        props: {
+          dataUrl: "/api",
+          columns: [
+            {'name': 'col'}
+          ],
+          filters: [
+            {'name': 'flt'},
+            {'name': 'flt2', 'choices': [{'value': 'asdf'}]}
+          ]
+        },
+        results: [{'col': 123}]
+      });
+      let expectClasses = e => expect([].slice.call(e.classList));
+      let table = ReactDOM.findDOMNode(rtable);
+      expectClasses(table).toEqual(['table', 'table-striped', 'table-hover']);
+      expectClasses(rtable.refs.paginationContainer).toEqual(['text-center']);
+      expectClasses(rtable.refs.columnHeaderRow).toEqual([]);
+      expectClasses(rtable.refs.filterRow).toEqual([]);
+      expectClasses(rtable.refs.filterRow.children[0]).toEqual(['form-inline']);
+      expectClasses(rtable.refs.filterRow.querySelector('input')).toEqual(['form-control', 'input-sm']);
+      expectClasses(rtable.refs.filterRow.querySelector('select')).toEqual(['form-control', 'input-sm']);
+      expectClasses(rtable.refs.rowContainer).toEqual([]);
+      // TODO drop t-next, t-prev
+      expectClasses(rtable.refs.paginationNext).toEqual(['btn', 'btn-primary', 't-next']);
+      expectClasses(rtable.refs.paginationPrevious).toEqual(['btn', 'btn-primary', 't-prev']);
+    });
   });
 });
 
