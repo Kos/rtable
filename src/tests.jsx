@@ -198,6 +198,28 @@ describe("RTable", function() {
       expectClasses(rtable.refs.paginationNext).toEqual(['btn', 'btn-primary', 't-next']);
       expectClasses(rtable.refs.paginationPrevious).toEqual(['btn', 'btn-primary', 't-prev']);
     });
+    it("should render initial ordering");
+    it("should render initial filter values", function() {
+      let location = "/?filter1=f1value&filter2=f2value";
+      spyOn(window.DataLoader.prototype, 'getWindowLocation').and.returnValue(location);
+      let rtable = this.renderWithData({
+        props: {
+          dataUrl: "/api",
+          columns: [],
+          filters: [
+            {'name': 'filter1'},
+            {'name': 'filter2', 'choices': [
+              {'value': 'whatever'},
+              {'value': 'f2value'}]}
+          ]
+        },
+        results: []
+      });
+      let input = rtable.refs.filterRow.querySelector("input");
+      let select = rtable.refs.filterRow.querySelector("select");
+      expect(input.value).toEqual("f1value");
+      expect(select.value).toEqual("f2value");
+    });
   });
 });
 

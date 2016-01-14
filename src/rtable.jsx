@@ -7,6 +7,9 @@ class RTable extends React.Component {
     };
     this.loader = new RTable.DataLoader(this, this.props.dataUrl);
   }
+  componentWillMount() {
+    this.setState({'initialState': this.loader.getInitialState()});
+  }
   componentDidMount() {
     this.loader.loadInitial();
   }
@@ -58,12 +61,12 @@ class RTable extends React.Component {
                 </label>
                 {' '}
                 {filter.choices
-                  ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.name)}>
+                  ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.name)} defaultValue={this.state.initialState[filter.name]}>
                       {filter.choices.map((choice, j) =>
                         <option key={j} value={choice.value}>{choice.label || choice.value}</option>
                       )}
                     </select>
-                  : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.name)}/>
+                  : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.name)} defaultValue={this.state.initialState[filter.name]} />
                 }
                 {' '}
               </span>
@@ -94,9 +97,14 @@ class DataLoader {
       filterDelayed: key => delayed(this.filterDelay, event => this.filter(event, key))
     };
   }
-  loadInitial() {
+  getInitialState() {
+    // TODO refactor moar, this is becoming super messy
     let data = parseUri(this.getWindowLocation()).queryKey;
     data.page = data.page || "1";
+    return data;
+  }
+  loadInitial() {
+    let data = this.getInitialState();
     let url = this.baseUrl;
     for (let k in data) if (data.hasOwnProperty(k)) {
       url = UpdateQueryString(k, data[k], url);

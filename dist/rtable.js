@@ -26,6 +26,11 @@ var RTable = function (_React$Component) {
   }
 
   _createClass(RTable, [{
+    key: "componentWillMount",
+    value: function componentWillMount() {
+      this.setState({ 'initialState': this.loader.getInitialState() });
+    }
+  }, {
     key: "componentDidMount",
     value: function componentDidMount() {
       this.loader.loadInitial();
@@ -130,7 +135,7 @@ var RTable = function (_React$Component) {
                   ' ',
                   filter.choices ? React.createElement(
                     "select",
-                    { className: "form-control input-sm ", onInput: _this2.loader.fn.filter(filter.name) },
+                    { className: "form-control input-sm ", onInput: _this2.loader.fn.filter(filter.name), defaultValue: _this2.state.initialState[filter.name] },
                     filter.choices.map(function (choice, j) {
                       return React.createElement(
                         "option",
@@ -138,7 +143,7 @@ var RTable = function (_React$Component) {
                         choice.label || choice.value
                       );
                     })
-                  ) : React.createElement("input", { className: "form-control input-sm", onInput: _this2.loader.fn.filterDelayed(filter.name) }),
+                  ) : React.createElement("input", { className: "form-control input-sm", onInput: _this2.loader.fn.filterDelayed(filter.name), defaultValue: _this2.state.initialState[filter.name] }),
                   ' '
                 );
               })
@@ -199,10 +204,17 @@ var DataLoader = function () {
   }
 
   _createClass(DataLoader, [{
-    key: "loadInitial",
-    value: function loadInitial() {
+    key: "getInitialState",
+    value: function getInitialState() {
+      // TODO refactor moar, this is becoming super messy
       var data = parseUri(this.getWindowLocation()).queryKey;
       data.page = data.page || "1";
+      return data;
+    }
+  }, {
+    key: "loadInitial",
+    value: function loadInitial() {
+      var data = this.getInitialState();
       var url = this.baseUrl;
       for (var k in data) {
         if (data.hasOwnProperty(k)) {
