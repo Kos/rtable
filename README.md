@@ -24,7 +24,42 @@ Status: *proof of concept*, needs testing and tidying up.
 - [ ] Theming (custom markup)
 - [ ] Arbitrary data sources
 
-Misc todos for the future:
+## FAQ
+
+- What is it for?
+
+  - The main use case is displaying data that's fetched from somewhere one page
+    at a time, perhaps with server-side filtering and sorting.
+
+- Is it only for use in React apps?
+    - Nah. You can use RTable in any page. You'll need to pull React and
+      ReactDOM as dependencies, though.
+
+- Is it only for use with Django Rest Framework?
+    - Nah, it's easy to make it work with any data source. But by default, it
+      expects something like:
+
+      ```
+      GET /my/api/url/?page=1&ordering=name&country=pl
+
+      {
+        "count": 402,
+        "next": "... url of next page ..."
+        "previous": null,
+        "results": [
+          {"id": 321, "name": "Jacek Placek", "country": "pl"},
+          {"id": 567, "name": "Paweł Gaweł", "country": "pl"}
+        ]
+      }
+      ```
+
+- Does it play well with Flux / Redux / <yet another hot architecture>?
+
+    - Probably not very much. It's designed to be self-contained and it manages
+      its own state. Open an issue if you think we can do better!
+
+
+## Misc Todos
 
 - [ ] Go to page N
 - [ ] Multi-column sorting
