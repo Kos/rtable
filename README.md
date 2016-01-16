@@ -83,14 +83,11 @@ React.createElement(RTable, {
 
 Each column is defined as an object with these fields:
 
-|  field  |                                 meaning                                 |
-| ------- | ----------------------------------------------------------------------- |
-| `name`  | Identifier name of the column                                           |
-| `label` | Optional. Pretty name of the column. Will be used in the table header.\ |
-|         | Defaults to `name`.                                                     |
-| `get`   | Optional. Function that takes a single row (as JSON) and returns\       |
-|         | the column's value. Can return a string or a React component.\          |
-|         | Defaults to `row => row[column.name]`.                                  |
+|  field  |                                                                                  meaning                                                                                   |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`  | Identifier name of the column                                                                                                                                              |
+| `label` | Optional. User-presentable name of the column. Will be used in the table header.<br>Defaults to `name`.                                                                    |
+| `get`   | Optional. Function that takes a single row (as JSON) and returns the column's value. Can return a string or a React component. <br> Defaults to `row => row[column.name]`. |
 
 
 ### Sorting
@@ -99,7 +96,37 @@ Each column is defined as an object with these fields:
 
 ### Filters
 
-...
+There are 2 kinds of filters available:
+
+- text: `<input type="text">`
+- choice: `<select>`
+
+(There could be more! A checkbox might work nice)
+
+```
+React.createElement(RTable, {
+  filters: [
+    ...
+  ]
+});
+```
+
+Each filter is defined as an object with these fields:
+
+|   field   |                                                           meaning                                                           |
+| --------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `name`    | Identifier. Corresponds to the url parameter that will be set to this filter's value.                                       |
+| `label`   | Optional. User-presentable name of the filter field. Defaults to `name`.                                                    |
+| `choices` | Optional. List of choice objects. <br> If `choices` are given, the filter is a choice filter, otherwise it's a text filter. |
+
+Each filter choice is defined as an object with these fields:
+
+|  field  |                                                                 meaning                                                                  |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `value` | Corresponds to the url parameter value that will be set when this choice is selected.<br>`null` means that this filter won't be applied. |
+| `label` | Optional. User-presentable text for this choice. Defaults to `value`.                                                                    |
+
+For choice filters, it makes sense to make an empty first choice, but it's not enforced.
 
 ## Other data sources
 
