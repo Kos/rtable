@@ -2,6 +2,8 @@
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -206,12 +208,9 @@ var DataLoader = function () {
       this.component.setState({
         initialFilterState: data
       });
-      var firstLoadUrl = this.baseUrl;
-      for (var k in data) {
-        if (data.hasOwnProperty(k)) {
-          firstLoadUrl = UpdateQueryString(k, data[k], firstLoadUrl);
-        }
-      }this.load(firstLoadUrl);
+      // TODO only read stuff that you understand, don't just take the whole window's QS
+      var initialDataUrl = updateQueryStringMultiple(data, this.baseUrl);
+      this.loadFromURL(initialDataUrl);
     }
   }, {
     key: "getWindowLocation",
@@ -224,13 +223,22 @@ var DataLoader = function () {
       return this.component.state;
     }
   }, {
-    key: "load",
-    value: function load(url) {
+    key: "loadWithUpdatedParams",
+    value: function loadWithUpdatedParams(newParams) {
+      var newDataUrl = updateQueryStringMultiple(newParams, this.currentState().dataUrl);
+      var newWindowUrl = updateQueryStringMultiple(newParams, window.location.href);
+      if (window.history.replaceState) {
+        window.history.replaceState({}, '', newWindowUrl);
+      }
+      return this.loadFromURL(newDataUrl);
+    }
+  }, {
+    key: "loadFromURL",
+    value: function loadFromURL(dataUrl) {
       var _this4 = this;
 
-      return getJson(url).then(function (response) {
-        // have: count, next, previous, results
-        var state = _this4.buildStateFromResponse(response, url);
+      return getJson(dataUrl).then(function (response) {
+        var state = _this4.buildStateFromResponse(response, dataUrl);
         _this4.component.setState(state);
         return state;
       });
@@ -240,12 +248,7 @@ var DataLoader = function () {
     value: function goToPage(event, page) {
       if (event.ctrlKey || event.altKey || event.shiftKey) return;
       event.preventDefault();
-      var newDataUrl = UpdateQueryString('page', page, this.currentState().fullUrl);
-      var newWindowUrl = UpdateQueryString('page', page, window.location.href);
-      if (window.history.replaceState) {
-        window.history.replaceState({}, '', newWindowUrl);
-      }
-      return this.load(newDataUrl);
+      return this.loadWithUpdatedParams({ page: page });
     }
   }, {
     key: "nextPage",
@@ -262,12 +265,7 @@ var DataLoader = function () {
     value: function orderBy(event, ordering) {
       if (event.ctrlKey || event.altKey || event.shiftKey) return;
       event.preventDefault();
-      var newDataUrl = UpdateQueryString('ordering', ordering, this.currentState().fullUrl);
-      var newWindowUrl = UpdateQueryString('ordering', ordering, window.location.href);
-      if (window.history.replaceState) {
-        window.history.replaceState({}, '', newWindowUrl);
-      }
-      return this.load(newDataUrl);
+      return this.loadWithUpdatedParams({ ordering: ordering });
     }
   }, {
     key: "orderToggle",
@@ -288,20 +286,15 @@ var DataLoader = function () {
     key: "filter",
     value: function filter(event, key) {
       var newFilterValue = event.target.value || null;
-      var newDataUrl = UpdateQueryString(key, newFilterValue, this.currentState().fullUrl);
-      var newWindowUrl = UpdateQueryString(key, newFilterValue, window.location.href);
-      if (window.history.replaceState) {
-        window.history.replaceState({}, '', newWindowUrl);
-      }
-      return this.load(newDataUrl);
+      return this.loadWithUpdatedParams(_defineProperty({}, key, newFilterValue));
     }
   }, {
     key: "buildStateFromResponse",
-    value: function buildStateFromResponse(response, url) {
+    value: function buildStateFromResponse(response, dataUrl) {
       var divideRoundUp = function divideRoundUp(a, b) {
         return Math.floor((a + b - 1) / b);
       };
-      var parsedUrl = parseUri(url);
+      var parsedUrl = parseUri(dataUrl);
       var urlParams = parsedUrl.queryKey;
       var query = '?' + parsedUrl.query;
       var page = parseInt(urlParams.page) || 1;
@@ -311,13 +304,13 @@ var DataLoader = function () {
         next: response.next,
         previous: response.previous,
         results: response.results,
-        fullUrl: url,
+        dataUrl: dataUrl,
         page: page,
         page0: page - 1,
         hasNext: !!response.next,
         hasPrev: !!response.previous,
-        nextQuery: UpdateQueryString('page', page + 1, query),
-        prevQuery: UpdateQueryString('page', page - 1, query),
+        nextQuery: updateQueryString('page', page + 1, query),
+        prevQuery: updateQueryString('page', page - 1, query),
         ordering: urlParams.ordering || null
       };
       if (response.next) {
@@ -409,7 +402,7 @@ parseUri.options = {
 };
 
 // http://stackoverflow.com/a/11654596/399317
-function UpdateQueryString(key, value, url) {
+function updateQueryString(key, value, url) {
   var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
   var hash;
 
@@ -429,4 +422,11 @@ function UpdateQueryString(key, value, url) {
       return url;
     } else return url;
   }
+}
+
+function updateQueryStringMultiple(obj, url) {
+  Object.keys(obj).forEach(function (key) {
+    url = updateQueryString(key, obj[key], url);
+  });
+  return url;
 }

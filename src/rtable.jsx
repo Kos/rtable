@@ -100,11 +100,9 @@ class DataLoader {
     this.component.setState({
       initialFilterState: data
     });
-    let firstLoadUrl = this.baseUrl;
-    for (let k in data) if (data.hasOwnProperty(k)) {
-      firstLoadUrl = UpdateQueryString(k, data[k], firstLoadUrl);
-    }
-    this.load(firstLoadUrl);
+    // TODO only read stuff that you understand, don't just take the whole window's QS
+    let initialDataUrl = updateQueryStringMultiple(data, this.baseUrl);
+    this.loadFromURL(initialDataUrl);
   }
   getWindowLocation() {
     return window.location;
@@ -112,10 +110,18 @@ class DataLoader {
   currentState() {
     return this.component.state;
   }
-  load(url) {
-    return getJson(url)
+  loadWithUpdatedParams(newParams) {
+    let newDataUrl = updateQueryStringMultiple(newParams, this.currentState().dataUrl);
+    let newWindowUrl = updateQueryStringMultiple(newParams, window.location.href);
+    if (window.history.replaceState) {
+      window.history.replaceState({}, '', newWindowUrl);
+    }
+    return this.loadFromURL(newDataUrl);
+  }
+  loadFromURL(dataUrl) {
+    return getJson(dataUrl)
     .then(response => {
-      let state = this.buildStateFromResponse(response, url);
+      let state = this.buildStateFromResponse(response, dataUrl);
       this.component.setState(state);
       return state;
     });
@@ -123,12 +129,7 @@ class DataLoader {
   goToPage(event, page) {
     if (event.ctrlKey || event.altKey || event.shiftKey) return;
     event.preventDefault();
-    let newDataUrl = UpdateQueryString('page', page, this.currentState().fullUrl);
-    let newWindowUrl = UpdateQueryString('page', page, window.location.href);
-    if (window.history.replaceState) {
-      window.history.replaceState({}, '', newWindowUrl);
-    }
-    return this.load(newDataUrl);
+    return this.loadWithUpdatedParams({page});
   }
   nextPage(event) {
     return this.goToPage(event, this.currentState().page+1);
@@ -139,12 +140,7 @@ class DataLoader {
   orderBy(event, ordering) {
     if (event.ctrlKey || event.altKey || event.shiftKey) return;
     event.preventDefault();
-    let newDataUrl = UpdateQueryString('ordering', ordering, this.currentState().fullUrl);
-    let newWindowUrl = UpdateQueryString('ordering', ordering, window.location.href);
-    if (window.history.replaceState) {
-      window.history.replaceState({}, '', newWindowUrl);
-    }
-    return this.load(newDataUrl);
+    return this.loadWithUpdatedParams({ordering});
   }
   orderToggle(event, ordering) {
     if (!ordering.length) {
@@ -161,16 +157,11 @@ class DataLoader {
   }
   filter(event, key) {
     let newFilterValue = event.target.value || null;
-    let newDataUrl = UpdateQueryString(key, newFilterValue, this.currentState().fullUrl);
-    let newWindowUrl = UpdateQueryString(key, newFilterValue, window.location.href);
-    if (window.history.replaceState) {
-      window.history.replaceState({}, '', newWindowUrl);
-    }
-    return this.load(newDataUrl);
+    return this.loadWithUpdatedParams({[key]: newFilterValue});
   }
-  buildStateFromResponse(response, url) {
+  buildStateFromResponse(response, dataUrl) {
     let divideRoundUp = (a, b) => Math.floor((a+b-1)/b);
-    let parsedUrl = parseUri(url);
+    let parsedUrl = parseUri(dataUrl);
     let urlParams = parsedUrl.queryKey;
     let query = '?' + parsedUrl.query;
     let page = parseInt(urlParams.page) || 1;
@@ -180,13 +171,13 @@ class DataLoader {
       next: response.next,
       previous: response.previous,
       results: response.results,
-      fullUrl: url,
+      dataUrl: dataUrl,
       page: page,
       page0: page - 1,
       hasNext: !!response.next,
       hasPrev: !!response.previous,
-      nextQuery: UpdateQueryString('page', page+1, query),
-      prevQuery: UpdateQueryString('page', page-1, query),
+      nextQuery: updateQueryString('page', page+1, query),
+      prevQuery: updateQueryString('page', page-1, query),
       ordering: urlParams.ordering || null
     };
     if (response.next) {
@@ -273,7 +264,7 @@ parseUri.options = {
 };
 
 // http://stackoverflow.com/a/11654596/399317
-function UpdateQueryString(key, value, url) {
+function updateQueryString(key, value, url) {
   var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi");
   var hash;
 
@@ -300,4 +291,9 @@ function UpdateQueryString(key, value, url) {
     else
       return url;
   }
+}
+
+function updateQueryStringMultiple(obj, url) {
+  Object.keys(obj).forEach(key => {url = updateQueryString(key, obj[key], url);});
+  return url;
 }
