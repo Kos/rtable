@@ -28,11 +28,6 @@ var RTable = function (_React$Component) {
   _createClass(RTable, [{
     key: "componentWillMount",
     value: function componentWillMount() {
-      this.setState({ 'initialState': this.loader.getInitialState() });
-    }
-  }, {
-    key: "componentDidMount",
-    value: function componentDidMount() {
       this.loader.loadInitial();
     }
   }, {
@@ -135,7 +130,7 @@ var RTable = function (_React$Component) {
                   ' ',
                   filter.choices ? React.createElement(
                     "select",
-                    { className: "form-control input-sm ", onInput: _this2.loader.fn.filter(filter.name), defaultValue: _this2.state.initialState[filter.name] },
+                    { className: "form-control input-sm ", onInput: _this2.loader.fn.filter(filter.name), defaultValue: _this2.state.initialFilterState[filter.name] },
                     filter.choices.map(function (choice, j) {
                       return React.createElement(
                         "option",
@@ -143,7 +138,7 @@ var RTable = function (_React$Component) {
                         choice.label || choice.value
                       );
                     })
-                  ) : React.createElement("input", { className: "form-control input-sm", onInput: _this2.loader.fn.filterDelayed(filter.name), defaultValue: _this2.state.initialState[filter.name] }),
+                  ) : React.createElement("input", { className: "form-control input-sm", onInput: _this2.loader.fn.filterDelayed(filter.name), defaultValue: _this2.state.initialFilterState[filter.name] }),
                   ' '
                 );
               })
@@ -204,23 +199,19 @@ var DataLoader = function () {
   }
 
   _createClass(DataLoader, [{
-    key: "getInitialState",
-    value: function getInitialState() {
-      // TODO refactor moar, this is becoming super messy
-      var data = parseUri(this.getWindowLocation()).queryKey;
-      data.page = data.page || "1";
-      return data;
-    }
-  }, {
     key: "loadInitial",
     value: function loadInitial() {
-      var data = this.getInitialState();
-      var url = this.baseUrl;
+      var data = parseUri(this.getWindowLocation()).queryKey;
+      data.page = data.page || "1";
+      this.component.setState({
+        initialFilterState: data
+      });
+      var firstLoadUrl = this.baseUrl;
       for (var k in data) {
         if (data.hasOwnProperty(k)) {
-          url = UpdateQueryString(k, data[k], url);
+          firstLoadUrl = UpdateQueryString(k, data[k], firstLoadUrl);
         }
-      }this.load(url);
+      }this.load(firstLoadUrl);
     }
   }, {
     key: "getWindowLocation",
@@ -237,34 +228,11 @@ var DataLoader = function () {
     value: function load(url) {
       var _this4 = this;
 
-      var divideRoundUp = function divideRoundUp(a, b) {
-        return Math.floor((a + b - 1) / b);
-      };
-      var parsedUrl = parseUri(url);
-      var urlParams = parsedUrl.queryKey;
       return getJson(url).then(function (response) {
         // have: count, next, previous, results
-        response.fullUrl = url;
-        response.query = '?' + parsedUrl.query; // TODO drop? use consistently?
-        response.page = parseInt(urlParams.page) || 1;
-        response.page0 = response.page - 1;
-        response.hasNext = !!response.next;
-        response.hasPrev = !!response.previous;
-        response.nextQuery = UpdateQueryString('page', response.page + 1, response.query);
-        response.prevQuery = UpdateQueryString('page', response.page - 1, response.query);
-        response.ordering = urlParams.ordering || null;
-        if (response.next) {
-          var pageSize = response.results.length;
-          response.pages = divideRoundUp(response.count, pageSize);
-          response.firstResult = pageSize * response.page0 + 1;
-          response.lastResult = pageSize * (response.page0 + 1);
-        } else {
-          response.pages = response.page;
-          response.lastResult = response.count;
-          response.firstResult = response.count - response.results.length + 1;
-        }
-        _this4.component.setState(response);
-        return response;
+        var state = _this4.buildStateFromResponse(response, url);
+        _this4.component.setState(state);
+        return state;
       });
     }
   }, {
@@ -326,6 +294,43 @@ var DataLoader = function () {
         window.history.replaceState({}, '', newWindowUrl);
       }
       return this.load(newDataUrl);
+    }
+  }, {
+    key: "buildStateFromResponse",
+    value: function buildStateFromResponse(response, url) {
+      var divideRoundUp = function divideRoundUp(a, b) {
+        return Math.floor((a + b - 1) / b);
+      };
+      var parsedUrl = parseUri(url);
+      var urlParams = parsedUrl.queryKey;
+      var query = '?' + parsedUrl.query;
+      var page = parseInt(urlParams.page) || 1;
+      var page0 = page - 1;
+      var state = {
+        count: response.count,
+        next: response.next,
+        previous: response.previous,
+        results: response.results,
+        fullUrl: url,
+        page: page,
+        page0: page - 1,
+        hasNext: !!response.next,
+        hasPrev: !!response.previous,
+        nextQuery: UpdateQueryString('page', page + 1, query),
+        prevQuery: UpdateQueryString('page', page - 1, query),
+        ordering: urlParams.ordering || null
+      };
+      if (response.next) {
+        var pageSize = response.results.length;
+        state.pages = divideRoundUp(response.count, pageSize);
+        state.firstResult = pageSize * page0 + 1;
+        state.lastResult = pageSize * (page0 + 1);
+      } else {
+        state.pages = page;
+        state.lastResult = response.count;
+        state.firstResult = response.count - response.results.length + 1;
+      }
+      return state;
     }
   }]);
 

@@ -8,9 +8,6 @@ class RTable extends React.Component {
     this.loader = new RTable.DataLoader(this, this.props.dataUrl);
   }
   componentWillMount() {
-    this.setState({'initialState': this.loader.getInitialState()});
-  }
-  componentDidMount() {
     this.loader.loadInitial();
   }
   getValue(row, col) {
@@ -61,12 +58,12 @@ class RTable extends React.Component {
                 </label>
                 {' '}
                 {filter.choices
-                  ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.name)} defaultValue={this.state.initialState[filter.name]}>
+                  ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.name)} defaultValue={this.state.initialFilterState[filter.name]}>
                       {filter.choices.map((choice, j) =>
                         <option key={j} value={choice.value}>{choice.label || choice.value}</option>
                       )}
                     </select>
-                  : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.name)} defaultValue={this.state.initialState[filter.name]} />
+                  : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.name)} defaultValue={this.state.initialFilterState[filter.name]} />
                 }
                 {' '}
               </span>
@@ -97,19 +94,17 @@ class DataLoader {
       filterDelayed: key => delayed(this.filterDelay, event => this.filter(event, key))
     };
   }
-  getInitialState() {
-    // TODO refactor moar, this is becoming super messy
+  loadInitial() {
     let data = parseUri(this.getWindowLocation()).queryKey;
     data.page = data.page || "1";
-    return data;
-  }
-  loadInitial() {
-    let data = this.getInitialState();
-    let url = this.baseUrl;
+    this.component.setState({
+      initialFilterState: data
+    });
+    let firstLoadUrl = this.baseUrl;
     for (let k in data) if (data.hasOwnProperty(k)) {
-      url = UpdateQueryString(k, data[k], url);
+      firstLoadUrl = UpdateQueryString(k, data[k], firstLoadUrl);
     }
-    this.load(url);
+    this.load(firstLoadUrl);
   }
   getWindowLocation() {
     return window.location;
@@ -118,33 +113,11 @@ class DataLoader {
     return this.component.state;
   }
   load(url) {
-    let divideRoundUp = (a, b) => Math.floor((a+b-1)/b);
-    let parsedUrl = parseUri(url);
-    let urlParams = parsedUrl.queryKey;
     return getJson(url)
     .then(response => {
-      // have: count, next, previous, results
-      response.fullUrl = url;
-      response.query = '?' + parsedUrl.query; // TODO drop? use consistently?
-      response.page = parseInt(urlParams.page) || 1;
-      response.page0 = response.page - 1;
-      response.hasNext = !!response.next;
-      response.hasPrev = !!response.previous;
-      response.nextQuery = UpdateQueryString('page', response.page+1, response.query);
-      response.prevQuery = UpdateQueryString('page', response.page-1, response.query);
-      response.ordering = urlParams.ordering || null;
-      if (response.next) {
-        let pageSize = response.results.length;
-        response.pages = divideRoundUp(response.count, pageSize);
-        response.firstResult = pageSize * response.page0 + 1;
-        response.lastResult = pageSize * (response.page0+1);
-      } else {
-        response.pages = response.page;
-        response.lastResult = response.count;
-        response.firstResult = response.count - response.results.length + 1;
-      }
-      this.component.setState(response);
-      return response;
+      let state = this.buildStateFromResponse(response, url);
+      this.component.setState(state);
+      return state;
     });
   }
   goToPage(event, page) {
@@ -194,7 +167,39 @@ class DataLoader {
       window.history.replaceState({}, '', newWindowUrl);
     }
     return this.load(newDataUrl);
-
+  }
+  buildStateFromResponse(response, url) {
+    let divideRoundUp = (a, b) => Math.floor((a+b-1)/b);
+    let parsedUrl = parseUri(url);
+    let urlParams = parsedUrl.queryKey;
+    let query = '?' + parsedUrl.query;
+    let page = parseInt(urlParams.page) || 1;
+    let page0 = page - 1;
+    let state = {
+      count: response.count,
+      next: response.next,
+      previous: response.previous,
+      results: response.results,
+      fullUrl: url,
+      page: page,
+      page0: page - 1,
+      hasNext: !!response.next,
+      hasPrev: !!response.previous,
+      nextQuery: UpdateQueryString('page', page+1, query),
+      prevQuery: UpdateQueryString('page', page-1, query),
+      ordering: urlParams.ordering || null
+    };
+    if (response.next) {
+      let pageSize = response.results.length;
+      state.pages = divideRoundUp(response.count, pageSize);
+      state.firstResult = pageSize * page0 + 1;
+      state.lastResult = pageSize * (page0+1);
+    } else {
+      state.pages = page;
+      state.lastResult = response.count;
+      state.firstResult = response.count - response.results.length + 1;
+    }
+    return state;
   }
 }
 
