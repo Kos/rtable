@@ -198,7 +198,18 @@ describe("RTable", function() {
       expectClasses(rtable.refs.paginationNext).toEqual(['btn', 'btn-primary', 't-next']);
       expectClasses(rtable.refs.paginationPrevious).toEqual(['btn', 'btn-primary', 't-prev']);
     });
-    it("should render initial ordering");
+    it("should render initial ordering", function() {
+      let location = "/?ordering=-foo";
+      spyOn(window.DataLoader.prototype, 'getWindowLocation').and.returnValue(location);
+      let rtable = this.renderWithData({
+        props: {
+          dataUrl: "/api",
+          columns: [{'name': 'foo'}]
+        },
+        results: []
+      });
+      expect(rtable.refs.columnHeaderRow.children[0].textContent).toEqual('foo' + '\u25BC');
+    });
     it("should render initial filter values", function() {
       let location = "/?filter1=f1value&filter2=f2value";
       spyOn(window.DataLoader.prototype, 'getWindowLocation').and.returnValue(location);
