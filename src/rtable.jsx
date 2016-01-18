@@ -57,14 +57,7 @@ class RTable extends React.Component {
                   {filter.label+':'}
                 </label>
                 {' '}
-                {filter.choices
-                  ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.name)} defaultValue={this.state.initialFilterState[filter.name]}>
-                      {filter.choices.map((choice, j) =>
-                        <option key={j} value={choice.value}>{choice.label || choice.value}</option>
-                      )}
-                    </select>
-                  : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.name)} defaultValue={this.state.initialFilterState[filter.name]} />
-                }
+                <FilterWidget filter={filter} fn={this.loader.fn} initialFilterState={this.state.initialFilterState} />
                 {' '}
               </span>
             )}
@@ -76,6 +69,23 @@ class RTable extends React.Component {
         </tbody>
       </table>
     );
+  }
+}
+
+function FilterWidget({filter, fn, initialFilterState}) {
+  if (filter.choices) {
+    return (
+      <select className="form-control input-sm " onInput={fn.filter(filter.name)} defaultValue={initialFilterState[filter.name]}>
+        {filter.choices.map((choice, j) =>
+          <option key={j} value={choice.value}>{choice.label || choice.value}</option>
+        )}
+      </select>
+    );
+  } else if (filter.valueChecked) {
+    let checked = (initialFilterState[filter.name] === filter.valueChecked.toString());
+    return <input type="checkbox" className="form-control input-sm" onClick={fn.filterToggle(filter.name, filter.valueChecked)} defaultChecked={checked} />;
+  } else {
+    return <input className="form-control input-sm" onInput={fn.filterDelayed(filter.name)} defaultValue={initialFilterState[filter.name]} />;
   }
 }
 
@@ -91,7 +101,8 @@ class DataLoader {
       orderBy: column => (event => this.orderBy(event, column)),
       orderToggle: column => (event => this.orderToggle(event, column)),
       filter: key => (event => this.filter(event, key)),
-      filterDelayed: key => delayed(this.filterDelay, event => this.filter(event, key))
+      filterDelayed: key => delayed(this.filterDelay, event => this.filter(event, key)),
+      filterToggle: (key, val) => (event) => this.filter2(event, key, event.target.checked ? val : null)
     };
   }
   loadInitial() {
@@ -158,6 +169,9 @@ class DataLoader {
   filter(event, key) {
     let newFilterValue = event.target.value || null;
     return this.loadWithUpdatedParams({[key]: newFilterValue});
+  }
+  filter2(event, key, value) {
+    return this.loadWithUpdatedParams({[key]: value});
   }
   buildStateFromResponse(response, dataUrl) {
     let divideRoundUp = (a, b) => Math.floor((a+b-1)/b);

@@ -64,6 +64,19 @@ describe("RTable", function() {
       UI.orderByIndex(0);
       expect(this.requests[2].url).toEqual('/api?page=1&ordering=-foo');
     });
+    it("should filter checkboxes immediately", function() {
+      UI.create({"columns": [],
+                "filters": [{"name": "foo", "valueChecked": "bar"}]});
+      expect(this.requests[0].url).toEqual('/api?page=1');
+      this.requests[0].respond({
+        count: 10, next: "/api?page=2", previous: null, results: rows(5)
+      });
+      UI.clickFilterByIndex('input', 0);
+      expect(this.requests[1].url).toEqual('/api?page=1&foo=bar');
+      UI.clickFilterByIndex('input', 0);
+      expect(this.requests[2].url).toEqual('/api?page=1');
+
+    });
     it("should filter selects immediately", function() {
       UI.create({"columns": [{"name": "foo", "label": "Foo"}],
                  "filters": [{"name": "foo", "label": "Foofilter", "choices": [
@@ -258,6 +271,12 @@ let UI = {
     let elem = document.querySelectorAll('#container thead ' + inputSelector)[index];
     elem.value = value;
     ReactTestUtils.Simulate.input(elem);
+  },
+
+  clickFilterByIndex(inputSelector, index) {
+    let elem = document.querySelectorAll('#container thead ' + inputSelector)[index];
+    elem.checked = !elem.checked;
+    ReactTestUtils.Simulate.click(elem);
   }
 };
 

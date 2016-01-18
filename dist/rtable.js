@@ -130,17 +130,7 @@ var RTable = function (_React$Component) {
                     filter.label + ':'
                   ),
                   ' ',
-                  filter.choices ? React.createElement(
-                    "select",
-                    { className: "form-control input-sm ", onInput: _this2.loader.fn.filter(filter.name), defaultValue: _this2.state.initialFilterState[filter.name] },
-                    filter.choices.map(function (choice, j) {
-                      return React.createElement(
-                        "option",
-                        { key: j, value: choice.value },
-                        choice.label || choice.value
-                      );
-                    })
-                  ) : React.createElement("input", { className: "form-control input-sm", onInput: _this2.loader.fn.filterDelayed(filter.name), defaultValue: _this2.state.initialFilterState[filter.name] }),
+                  React.createElement(FilterWidget, { filter: filter, fn: _this2.loader.fn, initialFilterState: _this2.state.initialFilterState }),
                   ' '
                 );
               })
@@ -163,6 +153,31 @@ var RTable = function (_React$Component) {
 
   return RTable;
 }(React.Component);
+
+function FilterWidget(_ref) {
+  var filter = _ref.filter;
+  var fn = _ref.fn;
+  var initialFilterState = _ref.initialFilterState;
+
+  if (filter.choices) {
+    return React.createElement(
+      "select",
+      { className: "form-control input-sm ", onInput: fn.filter(filter.name), defaultValue: initialFilterState[filter.name] },
+      filter.choices.map(function (choice, j) {
+        return React.createElement(
+          "option",
+          { key: j, value: choice.value },
+          choice.label || choice.value
+        );
+      })
+    );
+  } else if (filter.valueChecked) {
+    var checked = initialFilterState[filter.name] === filter.valueChecked.toString();
+    return React.createElement("input", { type: "checkbox", className: "form-control input-sm", onClick: fn.filterToggle(filter.name, filter.valueChecked), defaultChecked: checked });
+  } else {
+    return React.createElement("input", { className: "form-control input-sm", onInput: fn.filterDelayed(filter.name), defaultValue: initialFilterState[filter.name] });
+  }
+}
 
 var DataLoader = function () {
   function DataLoader(component, baseUrl) {
@@ -196,6 +211,11 @@ var DataLoader = function () {
         return delayed(_this3.filterDelay, function (event) {
           return _this3.filter(event, key);
         });
+      },
+      filterToggle: function filterToggle(key, val) {
+        return function (event) {
+          return _this3.filter2(event, key, event.target.checked ? val : null);
+        };
       }
     };
   }
@@ -287,6 +307,11 @@ var DataLoader = function () {
     value: function filter(event, key) {
       var newFilterValue = event.target.value || null;
       return this.loadWithUpdatedParams(_defineProperty({}, key, newFilterValue));
+    }
+  }, {
+    key: "filter2",
+    value: function filter2(event, key, value) {
+      return this.loadWithUpdatedParams(_defineProperty({}, key, value));
     }
   }, {
     key: "buildStateFromResponse",
