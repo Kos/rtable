@@ -1,6 +1,6 @@
 "use strict";
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -12,7 +12,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 /* global React */
 
-var RTable = (function (_React$Component) {
+var RTable = function (_React$Component) {
   _inherits(RTable, _React$Component);
 
   function RTable(props) {
@@ -163,9 +163,9 @@ var RTable = (function (_React$Component) {
   }]);
 
   return RTable;
-})(React.Component);
+}(React.Component);
 
-var DataLoader = (function () {
+var DataLoader = function () {
   function DataLoader(component, dataSource) {
     var _this3 = this;
 
@@ -204,23 +204,16 @@ var DataLoader = (function () {
   _createClass(DataLoader, [{
     key: "loadInitial",
     value: function loadInitial() {
-      var data = parseUri(this.getWindowLocation()).queryKey;
-      // TODO only read stuff that you understand, don't just take the whole window's QS
-      var initialFilterState = data;
+      var initialDataRequest = this.decodeWindowUrl();
       this.component.setState({
-        initialFilterState: initialFilterState
+        initialFilterState: initialDataRequest.filters
       });
-      var initialDataRequest = {
-        "page": data.page || 1,
-        "ordering": data.ordering || null,
-        "filters": initialFilterState
-      };
       this.loadFromSource(initialDataRequest);
     }
   }, {
     key: "getWindowLocation",
     value: function getWindowLocation() {
-      return window.location;
+      return window.location.href;
     }
   }, {
     key: "currentState",
@@ -233,11 +226,28 @@ var DataLoader = (function () {
       var state = this.currentState();
       var newDataRequest = Object.assign({}, state, newParams);
       newDataRequest.filters = Object.assign({}, state.filters, newParams.filters || {});
-      // TODO window history
-      // if (window.history.replaceState) {
-      // window.history.replaceState({}, '', newWindowUrl);
-      // }
+      if (window.history.replaceState) {
+        window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
+      }
       return this.loadFromSource(newDataRequest);
+    }
+  }, {
+    key: "encodeWindowUrl",
+    value: function encodeWindowUrl(dataRequest) {
+      var flatDataRequest = Object.assign({}, { page: dataRequest.page, ordering: dataRequest.ordering }, dataRequest.filters);
+      return updateQueryStringMultiple(flatDataRequest, this.getWindowLocation());
+    }
+  }, {
+    key: "decodeWindowUrl",
+    value: function decodeWindowUrl() {
+      var data = parseUri(this.getWindowLocation()).queryKey;
+      var initialFilterState = data;
+      // TODO only read stuff that you understand, don't just take the whole window's QS
+      return {
+        "page": data.page || 1,
+        "ordering": data.ordering || null,
+        "filters": initialFilterState
+      };
     }
   }, {
     key: "loadFromSource",
@@ -335,9 +345,9 @@ var DataLoader = (function () {
   }]);
 
   return DataLoader;
-})();
+}();
 
-var DefaultDataSource = (function () {
+var DefaultDataSource = function () {
   function DefaultDataSource(baseUrl) {
     _classCallCheck(this, DefaultDataSource);
 
@@ -358,7 +368,7 @@ var DefaultDataSource = (function () {
   }]);
 
   return DefaultDataSource;
-})();
+}();
 
 RTable.DataLoader = DataLoader;
 

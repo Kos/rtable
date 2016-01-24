@@ -96,21 +96,14 @@ class DataLoader {
     };
   }
   loadInitial() {
-    let data = parseUri(this.getWindowLocation()).queryKey;
-    // TODO only read stuff that you understand, don't just take the whole window's QS
-    let initialFilterState = data;
+    let initialDataRequest = this.decodeWindowUrl();
     this.component.setState({
-      initialFilterState
+      initialFilterState: initialDataRequest.filters
     });
-    let initialDataRequest = {
-      "page": data.page || 1,
-      "ordering": data.ordering || null,
-      "filters": initialFilterState
-    };
     this.loadFromSource(initialDataRequest);
   }
   getWindowLocation() {
-    return window.location;
+    return window.location.href;
   }
   currentState() {
     return this.component.state;
@@ -119,11 +112,27 @@ class DataLoader {
     let state = this.currentState();
     let newDataRequest = Object.assign({}, state, newParams);
     newDataRequest.filters = Object.assign({}, state.filters, newParams.filters || {});
-    // TODO window history
-    // if (window.history.replaceState) {
-      // window.history.replaceState({}, '', newWindowUrl);
-    // }
+    if (window.history.replaceState) {
+      window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
+    }
     return this.loadFromSource(newDataRequest);
+  }
+  encodeWindowUrl(dataRequest) {
+    let flatDataRequest = Object.assign(
+      {},
+      {page: dataRequest.page, ordering: dataRequest.ordering},
+      dataRequest.filters);
+    return updateQueryStringMultiple(flatDataRequest, this.getWindowLocation());
+  }
+  decodeWindowUrl() {
+    let data = parseUri(this.getWindowLocation()).queryKey;
+    let initialFilterState = data;
+    // TODO only read stuff that you understand, don't just take the whole window's QS
+    return {
+      "page": data.page || 1,
+      "ordering": data.ordering || null,
+      "filters": initialFilterState
+    };
   }
   loadFromSource(dataRequest) {
     return this.dataSource.get(dataRequest)
