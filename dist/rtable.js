@@ -53,7 +53,7 @@ var RTable = function (_React$Component) {
           "th",
           { key: n, onClick: _this2.loader.fn.orderToggle(col.name) },
           col.label || col.name,
-          _this2.state.ordering == col.name ? "▲" : _this2.state.ordering == "-" + col.name ? "▼" : null
+          _this2.state.ordering === col.name ? "▲" : _this2.state.ordering === "-" + col.name ? "▼" : null
         );
       });
       var rows = this.state.results.map(function (row, m) {
@@ -290,8 +290,8 @@ var DataLoader = function () {
       if (!ordering.length) {
         return;
       }
-      if (this.currentState().ordering == ordering) {
-        if (ordering[0] == '-') {
+      if (this.currentState().ordering === ordering) {
+        if (ordering[0] === '-') {
           ordering = ordering.substr(1);
         } else {
           ordering = '-' + ordering;
@@ -308,8 +308,13 @@ var DataLoader = function () {
   }, {
     key: "buildStateFromResponse",
     value: function buildStateFromResponse(dataResponse, dataRequest) {
+      var _this5 = this;
+
       var divideRoundUp = function divideRoundUp(a, b) {
         return Math.floor((a + b - 1) / b);
+      };
+      var buildPageUrl = function buildPageUrl(page) {
+        return _this5.encodeWindowUrl(Object.assign({}, dataRequest, { page: page }));
       };
       // TODO page ids should be opaque here.
       // don't special case 1, have the source support page null?
@@ -325,9 +330,8 @@ var DataLoader = function () {
         page0: page - 1,
         hasNext: !!dataResponse.next,
         hasPrev: !!dataResponse.previous,
-        // TODO build them from page ids
-        nextQuery: "TODO",
-        prevQuery: "TODO",
+        nextQuery: buildPageUrl(dataResponse.next),
+        prevQuery: buildPageUrl(dataResponse.previous),
         ordering: dataRequest.ordering || null
       };
       if (dataResponse.next) {
@@ -352,6 +356,8 @@ var DefaultDataSource = function () {
     _classCallCheck(this, DefaultDataSource);
 
     this.baseUrl = baseUrl;
+    // TODO this is a good place to allow to override how 'page' and 'ordering'
+    // params are passed to the backend.
   }
 
   _createClass(DefaultDataSource, [{
@@ -363,7 +369,17 @@ var DefaultDataSource = function () {
         ordering: dataRequest.ordering
       }, url);
       url = updateQueryStringMultiple(dataRequest.filters, url);
-      return getJson(url);
+      return getJson(url).then(function (dataResponse) {
+        if (!isNullOrUndefined(dataResponse.next)) {
+          dataResponse.next = parseUri(dataResponse.next).queryKey.page;
+        }
+        if (!isNullOrUndefined(dataResponse.previous)) {
+          // HACK: if there's a previous URL but the page param itself is missing,
+          // default to 1. DRF likes to drop the ?page=1
+          dataResponse.previous = parseUri(dataResponse.previous).queryKey.page || 1;
+        }
+        return dataResponse;
+      });
     }
   }]);
 
@@ -406,6 +422,10 @@ function delayed(delay, fn) {
       return fn.apply(null, _arguments);
     }, delay);
   };
+}
+
+function isNullOrUndefined(x) {
+  return x == null; // eslint-disable-line eqeqeq
 }
 
 /* ------------- */

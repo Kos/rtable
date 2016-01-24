@@ -23,8 +23,8 @@ class RTable extends React.Component {
     let header = columns.map((col, n) =>
       <th key={n} onClick={this.loader.fn.orderToggle(col.name)}>
         {col.label || col.name}
-        {this.state.ordering == col.name ? "\u25B2" :
-         this.state.ordering == "-"+col.name ? "\u25BC" :
+        {this.state.ordering === col.name ? "\u25B2" :
+         this.state.ordering === "-"+col.name ? "\u25BC" :
          null
         }
       </th>
@@ -162,8 +162,8 @@ class DataLoader {
     if (!ordering.length) {
       return;
     }
-    if (this.currentState().ordering == ordering) {
-      if (ordering[0] == '-') {
+    if (this.currentState().ordering === ordering) {
+      if (ordering[0] === '-') {
         ordering = ordering.substr(1);
       } else {
         ordering = '-'+ordering;
@@ -177,6 +177,8 @@ class DataLoader {
   }
   buildStateFromResponse(dataResponse, dataRequest) {
     let divideRoundUp = (a, b) => Math.floor((a+b-1)/b);
+    let buildPageUrl = page => this.encodeWindowUrl(Object.assign(
+      {}, dataRequest, {page}));
     // TODO page ids should be opaque here.
     // don't special case 1, have the source support page null?
     // (UI support needed too)
@@ -191,9 +193,8 @@ class DataLoader {
       page0: page - 1,
       hasNext: !!dataResponse.next,
       hasPrev: !!dataResponse.previous,
-      // TODO build them from page ids
-      nextQuery: "TODO",
-      prevQuery: "TODO",
+      nextQuery: buildPageUrl(dataResponse.next),
+      prevQuery: buildPageUrl(dataResponse.previous),
       ordering: dataRequest.ordering || null
     };
     if (dataResponse.next) {
@@ -213,6 +214,8 @@ class DataLoader {
 class DefaultDataSource {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
+    // TODO this is a good place to allow to override how 'page' and 'ordering'
+    // params are passed to the backend.
   }
   get(dataRequest) {
     let url = this.baseUrl;
@@ -221,7 +224,17 @@ class DefaultDataSource {
       ordering: dataRequest.ordering
     }, url);
     url = updateQueryStringMultiple(dataRequest.filters, url);
-    return getJson(url);
+    return getJson(url).then(dataResponse => {
+      if (!isNullOrUndefined(dataResponse.next)) {
+        dataResponse.next = parseUri(dataResponse.next).queryKey.page;
+      }
+      if (!isNullOrUndefined(dataResponse.previous)) {
+        // HACK: if there's a previous URL but the page param itself is missing,
+        // default to 1. DRF likes to drop the ?page=1
+        dataResponse.previous = parseUri(dataResponse.previous).queryKey.page || 1;
+      }
+      return dataResponse;
+    });
   }
 }
 
@@ -259,6 +272,9 @@ function delayed(delay, fn) {
   };
 }
 
+function isNullOrUndefined(x) {
+  return x == null;  // eslint-disable-line eqeqeq
+}
 
 /* ------------- */
 /* packaged deps */

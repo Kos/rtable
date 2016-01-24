@@ -15,13 +15,22 @@ describe("RTable", function() {
     d.id = 'container';
     document.body.insertBefore(d, document.body.children[0]);
     this.requests = [];
-    spyOn(window, 'getJson').and.callFake(url => {
+    spyOn(window.DefaultDataSource.prototype, 'get').and.callFake(dataRequest => {
       const promise = new MockPromise();
       this.requests.push({
-        url, promise,
+        dataRequest, promise,
+        url: mockUrl(dataRequest),
         respond: function(data) { this.promise.resolveNow(data); }
       });
       return promise;
+      function mockUrl(dataRequest) {
+        // TODO drop this hack, have tests look at the dataRequest object
+        let flatDataRequest = Object.assign(
+        {},
+        {page: dataRequest.page, ordering: dataRequest.ordering},
+        dataRequest.filters);
+        return window.updateQueryStringMultiple(flatDataRequest, '/api');
+      }
     });
   });
 
@@ -231,6 +240,7 @@ describe("RTable", function() {
       expect(input.value).toEqual("f1value");
       expect(select.value).toEqual("f2value");
     });
+    it("should render pagination buttons");
   });
 });
 
