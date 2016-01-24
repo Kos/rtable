@@ -1,6 +1,6 @@
 "use strict";
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -12,7 +12,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 /* global React */
 
-var RTable = function (_React$Component) {
+var RTable = (function (_React$Component) {
   _inherits(RTable, _React$Component);
 
   function RTable(props) {
@@ -23,7 +23,8 @@ var RTable = function (_React$Component) {
     _this.state = {
       results: []
     };
-    _this.loader = new RTable.DataLoader(_this, _this.props.dataUrl);
+    var dataSource = new DefaultDataSource(_this.props.dataUrl);
+    _this.loader = new RTable.DataLoader(_this, dataSource);
     return _this;
   }
 
@@ -162,16 +163,16 @@ var RTable = function (_React$Component) {
   }]);
 
   return RTable;
-}(React.Component);
+})(React.Component);
 
-var DataLoader = function () {
-  function DataLoader(component, baseUrl) {
+var DataLoader = (function () {
+  function DataLoader(component, dataSource) {
     var _this3 = this;
 
     _classCallCheck(this, DataLoader);
 
     this.component = component;
-    this.baseUrl = baseUrl;
+    this.dataSource = dataSource;
     this.filterDelay = 800;
     this.fn = {
       goToPage: this.goToPage.bind(this),
@@ -204,13 +205,17 @@ var DataLoader = function () {
     key: "loadInitial",
     value: function loadInitial() {
       var data = parseUri(this.getWindowLocation()).queryKey;
-      data.page = data.page || "1";
-      this.component.setState({
-        initialFilterState: data
-      });
       // TODO only read stuff that you understand, don't just take the whole window's QS
-      var initialDataUrl = updateQueryStringMultiple(data, this.baseUrl);
-      this.loadFromURL(initialDataUrl);
+      var initialFilterState = data;
+      this.component.setState({
+        initialFilterState: initialFilterState
+      });
+      var initialDataRequest = {
+        "page": data.page || 1,
+        "ordering": data.ordering || null,
+        "filters": initialFilterState
+      };
+      this.loadFromSource(initialDataRequest);
     }
   }, {
     key: "getWindowLocation",
@@ -225,20 +230,22 @@ var DataLoader = function () {
   }, {
     key: "loadWithUpdatedParams",
     value: function loadWithUpdatedParams(newParams) {
-      var newDataUrl = updateQueryStringMultiple(newParams, this.currentState().dataUrl);
-      var newWindowUrl = updateQueryStringMultiple(newParams, window.location.href);
-      if (window.history.replaceState) {
-        window.history.replaceState({}, '', newWindowUrl);
-      }
-      return this.loadFromURL(newDataUrl);
+      var state = this.currentState();
+      var newDataRequest = Object.assign({}, state, newParams);
+      newDataRequest.filters = Object.assign({}, state.filters, newParams.filters || {});
+      // TODO window history
+      // if (window.history.replaceState) {
+      // window.history.replaceState({}, '', newWindowUrl);
+      // }
+      return this.loadFromSource(newDataRequest);
     }
   }, {
-    key: "loadFromURL",
-    value: function loadFromURL(dataUrl) {
+    key: "loadFromSource",
+    value: function loadFromSource(dataRequest) {
       var _this4 = this;
 
-      return getJson(dataUrl).then(function (response) {
-        var state = _this4.buildStateFromResponse(response, dataUrl);
+      return this.dataSource.get(dataRequest).then(function (response) {
+        var state = _this4.buildStateFromResponse(response, dataRequest);
         _this4.component.setState(state);
         return state;
       });
@@ -286,49 +293,72 @@ var DataLoader = function () {
     key: "filter",
     value: function filter(event, key) {
       var newFilterValue = event.target.value || null;
-      return this.loadWithUpdatedParams(_defineProperty({}, key, newFilterValue));
+      return this.loadWithUpdatedParams({ filters: _defineProperty({}, key, newFilterValue) });
     }
   }, {
     key: "buildStateFromResponse",
-    value: function buildStateFromResponse(response, dataUrl) {
+    value: function buildStateFromResponse(dataResponse, dataRequest) {
       var divideRoundUp = function divideRoundUp(a, b) {
         return Math.floor((a + b - 1) / b);
       };
-      var parsedUrl = parseUri(dataUrl);
-      var urlParams = parsedUrl.queryKey;
-      var query = '?' + parsedUrl.query;
-      var page = parseInt(urlParams.page) || 1;
+      // TODO page ids should be opaque here.
+      // don't special case 1, have the source support page null?
+      // (UI support needed too)
+      var page = parseInt(dataRequest.page) || 1;
       var page0 = page - 1;
       var state = {
-        count: response.count,
-        next: response.next,
-        previous: response.previous,
-        results: response.results,
-        dataUrl: dataUrl,
+        count: dataResponse.count,
+        next: dataResponse.next,
+        previous: dataResponse.previous,
+        results: dataResponse.results,
         page: page,
         page0: page - 1,
-        hasNext: !!response.next,
-        hasPrev: !!response.previous,
-        nextQuery: updateQueryString('page', page + 1, query),
-        prevQuery: updateQueryString('page', page - 1, query),
-        ordering: urlParams.ordering || null
+        hasNext: !!dataResponse.next,
+        hasPrev: !!dataResponse.previous,
+        // TODO build them from page ids
+        nextQuery: "TODO",
+        prevQuery: "TODO",
+        ordering: dataRequest.ordering || null
       };
-      if (response.next) {
-        var pageSize = response.results.length;
-        state.pages = divideRoundUp(response.count, pageSize);
+      if (dataResponse.next) {
+        var pageSize = dataResponse.results.length;
+        state.pages = divideRoundUp(dataResponse.count, pageSize);
         state.firstResult = pageSize * page0 + 1;
         state.lastResult = pageSize * (page0 + 1);
       } else {
         state.pages = page;
-        state.lastResult = response.count;
-        state.firstResult = response.count - response.results.length + 1;
+        state.lastResult = dataResponse.count;
+        state.firstResult = dataResponse.count - dataResponse.results.length + 1;
       }
       return state;
     }
   }]);
 
   return DataLoader;
-}();
+})();
+
+var DefaultDataSource = (function () {
+  function DefaultDataSource(baseUrl) {
+    _classCallCheck(this, DefaultDataSource);
+
+    this.baseUrl = baseUrl;
+  }
+
+  _createClass(DefaultDataSource, [{
+    key: "get",
+    value: function get(dataRequest) {
+      var url = this.baseUrl;
+      url = updateQueryStringMultiple({
+        page: dataRequest.page,
+        ordering: dataRequest.ordering
+      }, url);
+      url = updateQueryStringMultiple(dataRequest.filters, url);
+      return getJson(url);
+    }
+  }]);
+
+  return DefaultDataSource;
+})();
 
 RTable.DataLoader = DataLoader;
 

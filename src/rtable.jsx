@@ -5,7 +5,8 @@ class RTable extends React.Component {
     this.state = {
       results: []
     };
-    this.loader = new RTable.DataLoader(this, this.props.dataUrl);
+    let dataSource = new DefaultDataSource(this.props.dataUrl);
+    this.loader = new RTable.DataLoader(this, dataSource);
   }
   componentWillMount() {
     this.loader.loadInitial();
@@ -80,9 +81,9 @@ class RTable extends React.Component {
 }
 
 class DataLoader {
-  constructor(component, baseUrl) {
+  constructor(component, dataSource) {
     this.component = component;
-    this.baseUrl = baseUrl;
+    this.dataSource = dataSource;
     this.filterDelay = 800;
     this.fn = {
       goToPage: this.goToPage.bind(this),
@@ -96,13 +97,17 @@ class DataLoader {
   }
   loadInitial() {
     let data = parseUri(this.getWindowLocation()).queryKey;
-    data.page = data.page || "1";
-    this.component.setState({
-      initialFilterState: data
-    });
     // TODO only read stuff that you understand, don't just take the whole window's QS
-    let initialDataUrl = updateQueryStringMultiple(data, this.baseUrl);
-    this.loadFromURL(initialDataUrl);
+    let initialFilterState = data;
+    this.component.setState({
+      initialFilterState
+    });
+    let initialDataRequest = {
+      "page": data.page || 1,
+      "ordering": data.ordering || null,
+      "filters": initialFilterState
+    };
+    this.loadFromSource(initialDataRequest);
   }
   getWindowLocation() {
     return window.location;
@@ -111,17 +116,19 @@ class DataLoader {
     return this.component.state;
   }
   loadWithUpdatedParams(newParams) {
-    let newDataUrl = updateQueryStringMultiple(newParams, this.currentState().dataUrl);
-    let newWindowUrl = updateQueryStringMultiple(newParams, window.location.href);
-    if (window.history.replaceState) {
-      window.history.replaceState({}, '', newWindowUrl);
-    }
-    return this.loadFromURL(newDataUrl);
+    let state = this.currentState();
+    let newDataRequest = Object.assign({}, state, newParams);
+    newDataRequest.filters = Object.assign({}, state.filters, newParams.filters || {});
+    // TODO window history
+    // if (window.history.replaceState) {
+      // window.history.replaceState({}, '', newWindowUrl);
+    // }
+    return this.loadFromSource(newDataRequest);
   }
-  loadFromURL(dataUrl) {
-    return getJson(dataUrl)
+  loadFromSource(dataRequest) {
+    return this.dataSource.get(dataRequest)
     .then(response => {
-      let state = this.buildStateFromResponse(response, dataUrl);
+      let state = this.buildStateFromResponse(response, dataRequest);
       this.component.setState(state);
       return state;
     });
@@ -157,40 +164,55 @@ class DataLoader {
   }
   filter(event, key) {
     let newFilterValue = event.target.value || null;
-    return this.loadWithUpdatedParams({[key]: newFilterValue});
+    return this.loadWithUpdatedParams({filters: {[key]: newFilterValue}});
   }
-  buildStateFromResponse(response, dataUrl) {
+  buildStateFromResponse(dataResponse, dataRequest) {
     let divideRoundUp = (a, b) => Math.floor((a+b-1)/b);
-    let parsedUrl = parseUri(dataUrl);
-    let urlParams = parsedUrl.queryKey;
-    let query = '?' + parsedUrl.query;
-    let page = parseInt(urlParams.page) || 1;
+    // TODO page ids should be opaque here.
+    // don't special case 1, have the source support page null?
+    // (UI support needed too)
+    let page = parseInt(dataRequest.page) || 1;
     let page0 = page - 1;
     let state = {
-      count: response.count,
-      next: response.next,
-      previous: response.previous,
-      results: response.results,
-      dataUrl: dataUrl,
+      count: dataResponse.count,
+      next: dataResponse.next,
+      previous: dataResponse.previous,
+      results: dataResponse.results,
       page: page,
       page0: page - 1,
-      hasNext: !!response.next,
-      hasPrev: !!response.previous,
-      nextQuery: updateQueryString('page', page+1, query),
-      prevQuery: updateQueryString('page', page-1, query),
-      ordering: urlParams.ordering || null
+      hasNext: !!dataResponse.next,
+      hasPrev: !!dataResponse.previous,
+      // TODO build them from page ids
+      nextQuery: "TODO",
+      prevQuery: "TODO",
+      ordering: dataRequest.ordering || null
     };
-    if (response.next) {
-      let pageSize = response.results.length;
-      state.pages = divideRoundUp(response.count, pageSize);
+    if (dataResponse.next) {
+      let pageSize = dataResponse.results.length;
+      state.pages = divideRoundUp(dataResponse.count, pageSize);
       state.firstResult = pageSize * page0 + 1;
       state.lastResult = pageSize * (page0+1);
     } else {
       state.pages = page;
-      state.lastResult = response.count;
-      state.firstResult = response.count - response.results.length + 1;
+      state.lastResult = dataResponse.count;
+      state.firstResult = dataResponse.count - dataResponse.results.length + 1;
     }
     return state;
+  }
+}
+
+class DefaultDataSource {
+  constructor(baseUrl) {
+    this.baseUrl = baseUrl;
+  }
+  get(dataRequest) {
+    let url = this.baseUrl;
+    url = updateQueryStringMultiple({
+      page: dataRequest.page,
+      ordering: dataRequest.ordering
+    }, url);
+    url = updateQueryStringMultiple(dataRequest.filters, url);
+    return getJson(url);
   }
 }
 
