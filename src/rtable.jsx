@@ -110,29 +110,28 @@ class DataLoader {
   }
   loadWithUpdatedParams(newParams) {
     let state = this.currentState();
-    let newDataRequest = Object.assign({}, state, newParams);
-    newDataRequest.filters = Object.assign({}, state.filters, newParams.filters || {});
+    let newDataRequest = new DataRequest({
+      page: (newParams.page !== undefined ? newParams.page : state.page),
+      ordering: (newParams.ordering !== undefined ? newParams.ordering : state.ordering),
+      filters: Object.assign({}, state.filters, newParams.filters || {})
+    });
     if (window.history.replaceState) {
       window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
     }
     return this.loadFromSource(newDataRequest);
   }
   encodeWindowUrl(dataRequest) {
-    let flatDataRequest = Object.assign(
-      {},
-      {page: dataRequest.page, ordering: dataRequest.ordering},
-      dataRequest.filters);
-    return updateQueryStringMultiple(flatDataRequest, this.getWindowLocation());
+    return updateQueryStringMultiple(dataRequest.flatten(), this.getWindowLocation());
   }
   decodeWindowUrl() {
     let data = parseUri(this.getWindowLocation()).queryKey;
     let initialFilterState = data;
     // TODO only read stuff that you understand, don't just take the whole window's QS
-    return {
+    return new DataRequest({
       "page": data.page || 1,
       "ordering": data.ordering || null,
       "filters": initialFilterState
-    };
+    });
   }
   loadFromSource(dataRequest) {
     return this.dataSource.get(dataRequest)
@@ -178,7 +177,7 @@ class DataLoader {
   buildStateFromResponse(dataResponse, dataRequest) {
     let divideRoundUp = (a, b) => Math.floor((a+b-1)/b);
     let buildPageUrl = page => this.encodeWindowUrl(Object.assign(
-      {}, dataRequest, {page}));
+      new DataRequest(dataRequest), {page}));
     // TODO page ids should be opaque here.
     // don't special case 1, have the source support page null?
     // (UI support needed too)
@@ -211,6 +210,18 @@ class DataLoader {
   }
 }
 
+class DataRequest {
+  constructor(params) {
+    Object.assign(this, params);
+  }
+  flatten() {
+    // TODO if we're relying on flatten so much,
+    // what's the benefit of having filters un-flattened by default?
+    return Object.assign({page: this.page, ordering: this.ordering},
+                         this.filters);
+  }
+}
+
 class DefaultDataSource {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
@@ -219,11 +230,7 @@ class DefaultDataSource {
   }
   get(dataRequest) {
     let url = this.baseUrl;
-    url = updateQueryStringMultiple({
-      page: dataRequest.page,
-      ordering: dataRequest.ordering
-    }, url);
-    url = updateQueryStringMultiple(dataRequest.filters, url);
+    url = updateQueryStringMultiple(dataRequest.flatten(), url);
     return getJson(url).then(dataResponse => {
       if (!isNullOrUndefined(dataResponse.next)) {
         dataResponse.next = parseUri(dataResponse.next).queryKey.page;

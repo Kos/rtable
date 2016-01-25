@@ -224,8 +224,11 @@ var DataLoader = function () {
     key: "loadWithUpdatedParams",
     value: function loadWithUpdatedParams(newParams) {
       var state = this.currentState();
-      var newDataRequest = Object.assign({}, state, newParams);
-      newDataRequest.filters = Object.assign({}, state.filters, newParams.filters || {});
+      var newDataRequest = new DataRequest({
+        page: newParams.page !== undefined ? newParams.page : state.page,
+        ordering: newParams.ordering !== undefined ? newParams.ordering : state.ordering,
+        filters: Object.assign({}, state.filters, newParams.filters || {})
+      });
       if (window.history.replaceState) {
         window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
       }
@@ -234,8 +237,7 @@ var DataLoader = function () {
   }, {
     key: "encodeWindowUrl",
     value: function encodeWindowUrl(dataRequest) {
-      var flatDataRequest = Object.assign({}, { page: dataRequest.page, ordering: dataRequest.ordering }, dataRequest.filters);
-      return updateQueryStringMultiple(flatDataRequest, this.getWindowLocation());
+      return updateQueryStringMultiple(dataRequest.flatten(), this.getWindowLocation());
     }
   }, {
     key: "decodeWindowUrl",
@@ -243,11 +245,11 @@ var DataLoader = function () {
       var data = parseUri(this.getWindowLocation()).queryKey;
       var initialFilterState = data;
       // TODO only read stuff that you understand, don't just take the whole window's QS
-      return {
+      return new DataRequest({
         "page": data.page || 1,
         "ordering": data.ordering || null,
         "filters": initialFilterState
-      };
+      });
     }
   }, {
     key: "loadFromSource",
@@ -314,7 +316,7 @@ var DataLoader = function () {
         return Math.floor((a + b - 1) / b);
       };
       var buildPageUrl = function buildPageUrl(page) {
-        return _this5.encodeWindowUrl(Object.assign({}, dataRequest, { page: page }));
+        return _this5.encodeWindowUrl(Object.assign(new DataRequest(dataRequest), { page: page }));
       };
       // TODO page ids should be opaque here.
       // don't special case 1, have the source support page null?
@@ -351,6 +353,25 @@ var DataLoader = function () {
   return DataLoader;
 }();
 
+var DataRequest = function () {
+  function DataRequest(params) {
+    _classCallCheck(this, DataRequest);
+
+    Object.assign(this, params);
+  }
+
+  _createClass(DataRequest, [{
+    key: "flatten",
+    value: function flatten() {
+      // TODO if we're relying on flatten so much,
+      // what's the benefit of having filters un-flattened by default?
+      return Object.assign({ page: this.page, ordering: this.ordering }, this.filters);
+    }
+  }]);
+
+  return DataRequest;
+}();
+
 var DefaultDataSource = function () {
   function DefaultDataSource(baseUrl) {
     _classCallCheck(this, DefaultDataSource);
@@ -364,11 +385,7 @@ var DefaultDataSource = function () {
     key: "get",
     value: function get(dataRequest) {
       var url = this.baseUrl;
-      url = updateQueryStringMultiple({
-        page: dataRequest.page,
-        ordering: dataRequest.ordering
-      }, url);
-      url = updateQueryStringMultiple(dataRequest.filters, url);
+      url = updateQueryStringMultiple(dataRequest.flatten(), url);
       return getJson(url).then(function (dataResponse) {
         if (!isNullOrUndefined(dataResponse.next)) {
           dataResponse.next = parseUri(dataResponse.next).queryKey.page;
