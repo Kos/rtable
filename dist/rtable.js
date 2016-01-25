@@ -23,7 +23,7 @@ var RTable = function (_React$Component) {
     _this.state = {
       results: []
     };
-    var dataSource = new DefaultDataSource(_this.props.dataUrl);
+    var dataSource = _this.props.dataSource || new DefaultDataSource(_this.props.dataUrl);
     _this.loader = new RTable.DataLoader(_this, dataSource);
     return _this;
   }

@@ -5,7 +5,7 @@ class RTable extends React.Component {
     this.state = {
       results: []
     };
-    let dataSource = new DefaultDataSource(this.props.dataUrl);
+    let dataSource = this.props.dataSource || new DefaultDataSource(this.props.dataUrl);
     this.loader = new RTable.DataLoader(this, dataSource);
   }
   componentWillMount() {

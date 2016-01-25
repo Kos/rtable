@@ -17,30 +17,37 @@
       <div id="react-container"</div>
     </div>
     <script>
-    window.getJson = function(url) {
-      // ha ha, this will have to do until we have proper non-Django Rest Framework
-      // data source support
-      return $.get(url)
-      .then(function(data, status, jqXHR) {
-        var data = {
-          "count": 999, // TODO: make count optional
-          "next": null,
-          "previous": null,
-          "results": data
-        };
-        // Read Link headers, populate "next" and "previous"
-        var links = (jqXHR.getResponseHeader('Link') || "").split(',');
-        links.forEach(function(link) {
-          groups = /<([^>]*)>; rel=.(\w+)./.exec(link);
-          if (!groups) return;
-          if (groups[2] === "next") {
-            data.next = groups[1];
-          } else if (groups[2] === "prev") {
-            data.previous = groups[1];
-          }
+    var GithubCommits = {
+      get: function(dataRequest) {
+        var baseUrl = 'https://api.github.com/repos/tomchristie/django-rest-framework/commits?per_page=10';
+        var url = updateQueryStringMultiple({
+          page: dataRequest.page,
+          ordering: null
+        }, baseUrl);
+        url = updateQueryStringMultiple(dataRequest.filters, url);
+        return $.get(url)
+        .then(function(data, status, jqXHR) {
+          var links = GithubCommits.parseLinks(jqXHR);
+          return {
+            count: 999, // TODO: make count optional
+            next: links.next,
+            previous: links.prev,
+            results: data
+          };
         });
-        return data;
-      });
+      },
+
+      parseLinks: function(jqXHR) {
+        return (jqXHR.getResponseHeader('Link') || "")
+        .split(',')
+        .reduce(function(links, str) {
+          var groups = /<([^>]*)>; rel=.(\w+)./.exec(str);
+          if (groups) {
+            links[groups[2]] = parseUri(groups[1]).queryKey.page || 1;
+          }
+          return links;
+        }, {});
+      }
     };
 
     function pre(str) {
@@ -52,7 +59,7 @@
 
     ReactDOM.render(
       React.createElement(RTable, {
-        dataUrl: 'https://api.github.com/repos/tomchristie/django-rest-framework/commits?per_page=10',
+        dataSource: GithubCommits,
         columns: [
           {name: "author_avatar", label: "", get: function(commit) { return commit.author ? img(commit.author.avatar_url, 48) : ''; }},
           {name: "author", label: "Author", get: function(commit) { return commit.commit.author.name; }},
