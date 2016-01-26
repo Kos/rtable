@@ -17,34 +17,17 @@
       <div id="react-container"</div>
     </div>
     <script>
-    var GithubCommits = {
-      get: function(dataRequest) {
-        var baseUrl = 'https://api.github.com/repos/tomchristie/django-rest-framework/commits?per_page=10';
-        var url = updateQueryStringMultiple(dataRequest.flatten(), baseUrl);
-        return $.get(url)
-        .then(function(data, status, jqXHR) {
-          var links = GithubCommits.parseLinks(jqXHR);
-          return {
-            count: 999, // TODO: make count optional
-            next: links.next,
-            previous: links.prev,
-            results: data
-          };
-        });
-      },
-
-      parseLinks: function(jqXHR) {
-        return (jqXHR.getResponseHeader('Link') || "")
-        .split(',')
-        .reduce(function(links, str) {
-          var groups = /<([^>]*)>; rel=.(\w+)./.exec(str);
-          if (groups) {
-            links[groups[2]] = parseUri(groups[1]).queryKey.page || 1;
-          }
-          return links;
-        }, {});
+    var GithubCommits = new AjaxDataSource({
+      baseUrl: 'https://api.github.com/repos/tomchristie/django-rest-framework/commits?per_page=10',
+      onResponse: function(response) {
+        return {
+          count: 999, // TODO: make count optional
+          next: response.getUrlParamFromLinkHeader('page', 'next'),
+          previous: response.getUrlParamFromLinkHeader('page', 'prev'),
+          results: response.json
+        };
       }
-    };
+    });
 
     function pre(str) {
       return React.createElement('pre', { style: { 'whiteSpace': 'pre-wrap' }}, str);

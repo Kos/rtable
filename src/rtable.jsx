@@ -210,6 +210,8 @@ class DataLoader {
   }
 }
 
+RTable.DataLoader = DataLoader;
+
 class DataRequest {
   constructor(params) {
     Object.assign(this, params);
@@ -223,6 +225,7 @@ class DataRequest {
 }
 
 class DefaultDataSource {
+  // TODO implement on top of AjaxDataSource
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
     // TODO this is a good place to allow to override how 'page' and 'ordering'
@@ -245,9 +248,49 @@ class DefaultDataSource {
   }
 }
 
-RTable.DataLoader = DataLoader;
+class AjaxDataSource {
+  constructor({baseUrl, onResponse}) {
+    this.baseUrl = baseUrl;
+    this.onResponse = onResponse;
+  }
+  get(dataRequest) {
+    let url = updateQueryStringMultiple(dataRequest.flatten(), this.baseUrl);
+    return ajaxGet(url).then(xhr =>
+      this.onResponse(new AjaxDataSourceResponse(xhr)));
+  }
+}
+
+class AjaxDataSourceResponse {
+  constructor(xhr) {
+    this.xhr = xhr;
+    try {
+      this.json = JSON.parse(xhr.responseText);
+    } catch(e) {
+      this.json = null;
+    }
+  }
+  getUrlParamFromLinkHeader(param, rel) {
+    let header = this.xhr.getResponseHeader('Link');
+    let linkRegex = /<([^>]+)>; rel="(\w+)"/g;
+    for (let groups; (groups=linkRegex.exec(header)); ) {
+      let thisURL = groups[1];
+      let thisRel = groups[2];
+      if (thisRel === rel) {
+        return this.getUrlParamFromURL(param, thisURL);
+      }
+    }
+    return null;
+  }
+  getUrlParamFromURL(param, url) {
+    return parseUri(url).queryKey[param];
+  }
+}
 
 function getJson(url) {
+  return ajaxGet(url, 'json');
+}
+
+function ajaxGet(url, res='xhr') {
   var request = new XMLHttpRequest();
   return new Promise((resolve, reject) => {
     request.open('GET', url, true);
@@ -257,7 +300,12 @@ function getJson(url) {
       }
       if (this.status >= 200 && this.status < 400) {
         try {
-          resolve(JSON.parse(this.responseText));
+          if (res === 'json') {
+            // TODO drop res, handle json in caller
+            resolve(JSON.parse(this.responseText), this);
+          } else {
+            resolve(this);
+          }
         } catch (e) {
           reject(e);
         }

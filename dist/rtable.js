@@ -353,6 +353,8 @@ var DataLoader = function () {
   return DataLoader;
 }();
 
+RTable.DataLoader = DataLoader;
+
 var DataRequest = function () {
   function DataRequest(params) {
     _classCallCheck(this, DataRequest);
@@ -373,6 +375,8 @@ var DataRequest = function () {
 }();
 
 var DefaultDataSource = function () {
+  // TODO implement on top of AjaxDataSource
+
   function DefaultDataSource(baseUrl) {
     _classCallCheck(this, DefaultDataSource);
 
@@ -403,9 +407,75 @@ var DefaultDataSource = function () {
   return DefaultDataSource;
 }();
 
-RTable.DataLoader = DataLoader;
+var AjaxDataSource = function () {
+  function AjaxDataSource(_ref) {
+    var baseUrl = _ref.baseUrl;
+    var onResponse = _ref.onResponse;
+
+    _classCallCheck(this, AjaxDataSource);
+
+    this.baseUrl = baseUrl;
+    this.onResponse = onResponse;
+  }
+
+  _createClass(AjaxDataSource, [{
+    key: "get",
+    value: function get(dataRequest) {
+      var _this6 = this;
+
+      var url = updateQueryStringMultiple(dataRequest.flatten(), this.baseUrl);
+      return ajaxGet(url).then(function (xhr) {
+        return _this6.onResponse(new AjaxDataSourceResponse(xhr));
+      });
+    }
+  }]);
+
+  return AjaxDataSource;
+}();
+
+var AjaxDataSourceResponse = function () {
+  function AjaxDataSourceResponse(xhr) {
+    _classCallCheck(this, AjaxDataSourceResponse);
+
+    this.xhr = xhr;
+    try {
+      this.json = JSON.parse(xhr.responseText);
+    } catch (e) {
+      this.json = null;
+    }
+  }
+
+  _createClass(AjaxDataSourceResponse, [{
+    key: "getUrlParamFromLinkHeader",
+    value: function getUrlParamFromLinkHeader(param, rel) {
+      var header = this.xhr.getResponseHeader('Link');
+      var linkRegex = /<([^>]+)>; rel="(\w+)"/g;
+      for (var groups; groups = linkRegex.exec(header);) {
+        var thisURL = groups[1];
+        var thisRel = groups[2];
+        if (thisRel === rel) {
+          return this.getUrlParamFromURL(param, thisURL);
+        }
+      }
+      return null;
+    }
+  }, {
+    key: "getUrlParamFromURL",
+    value: function getUrlParamFromURL(param, url) {
+      return parseUri(url).queryKey[param];
+    }
+  }]);
+
+  return AjaxDataSourceResponse;
+}();
 
 function getJson(url) {
+  return ajaxGet(url, 'json');
+}
+
+function ajaxGet(url) {
+  var res = arguments.length <= 1 || arguments[1] === undefined ? 'xhr' : arguments[1];
+
   var request = new XMLHttpRequest();
   return new Promise(function (resolve, reject) {
     request.open('GET', url, true);
@@ -415,7 +485,12 @@ function getJson(url) {
       }
       if (this.status >= 200 && this.status < 400) {
         try {
-          resolve(JSON.parse(this.responseText));
+          if (res === 'json') {
+            // TODO drop res, handle json in caller
+            resolve(JSON.parse(this.responseText), this);
+          } else {
+            resolve(this);
+          }
         } catch (e) {
           reject(e);
         }
