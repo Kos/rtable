@@ -438,10 +438,13 @@ var AjaxDataSourceResponse = function () {
     _classCallCheck(this, AjaxDataSourceResponse);
 
     this.xhr = xhr;
-    try {
-      this.json = JSON.parse(xhr.responseText);
-    } catch (e) {
-      this.json = null;
+    this.json = null;
+    if ((this.xhr.getResponseHeader('content-type') || "").toLowerCase() === 'application/json') {
+      try {
+        this.json = JSON.parse(xhr.responseText);
+      } catch (e) {
+        // ignore, leave null
+      }
     }
   }
 

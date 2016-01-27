@@ -1,5 +1,5 @@
 /* global React, ReactDOM */
-/* global RTable */
+/* global RTable, AjaxDataSourceResponse */
 /* global sinon */
 
 let ReactTestUtils = React.addons.TestUtils;
@@ -241,6 +241,40 @@ describe("RTable", function() {
       expect(select.value).toEqual("f2value");
     });
     it("should render pagination buttons");
+  });
+});
+
+describe("AjaxDataSource", function() {
+  it("should GET baseUrl");
+  it("should call onResponse");
+});
+
+describe("AjaxDataSourceResponse", function() {
+  it("should load json", function() {
+    let jsonPayload = {foo: "bar"};
+    let fakeXhr = {
+      getResponseHeader: () => "application/json",
+      responseText: JSON.stringify(jsonPayload)
+    };
+    let source = new AjaxDataSourceResponse(fakeXhr);
+    expect(source.xhr).toBe(fakeXhr);
+    expect(source.json).toEqual(jsonPayload);
+  });
+  it("should parse Link headers", function() {
+    let header = 'Link: <https://api.github.com/user/repos?page=3&per_page=100>; rel="next",' +
+      ' <https://api.github.com/user/repos?page=50&per_page=100>; rel="last"';
+    let fakeXhr = {getResponseHeader() {}};
+
+    let source = new AjaxDataSourceResponse(fakeXhr);
+    spyOn(fakeXhr, 'getResponseHeader').and.returnValue(header);
+    source.getUrlParamFromLinkHeader("page", "next");
+    expect(fakeXhr.getResponseHeader.calls.count()).toEqual(1);
+    expect(fakeXhr.getResponseHeader.calls.argsFor(0)).toEqual(['Link']);
+
+    expect(source.getUrlParamFromLinkHeader("page", "next")).toEqual("3");
+    expect(source.getUrlParamFromLinkHeader("page", "last")).toEqual("50");
+    expect(source.getUrlParamFromLinkHeader("page", "foo")).toEqual(null);
+    expect(source.getUrlParamFromLinkHeader("per_page", "next")).toEqual("100");
   });
 });
 
