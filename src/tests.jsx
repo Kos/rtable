@@ -1,5 +1,5 @@
 /* global React, ReactDOM */
-/* global RTable, AjaxDataSourceResponse */
+/* global RTable, AjaxDataSource, AjaxDataSourceResponse */
 /* global sinon */
 
 let ReactTestUtils = React.addons.TestUtils;
@@ -245,8 +245,27 @@ describe("RTable", function() {
 });
 
 describe("AjaxDataSource", function() {
-  it("should GET baseUrl");
-  it("should call onResponse");
+  it("should GET baseUrl and call onResponse", function() {
+    let params = {
+      baseUrl: "http://example.com/foo",
+      onResponse: jasmine.createSpy('onResponse')
+    };
+    let dataRequest = {
+      'page': 1,
+      'ordering' : '-quux',
+      'filters': {'foo': 'bar'},
+      'flatten': () => ({'page': 1, 'ordering': '-quux', 'foo': 'bar'})
+    };
+    let ajaxGetPromise = new MockPromise();
+    let ajaxGet = spyOn(window, 'ajaxGet').and.returnValue(ajaxGetPromise);
+    new AjaxDataSource(params).get(dataRequest);
+    expect(ajaxGet).toHaveBeenCalledWith(
+      "http://example.com/foo?page=1&ordering=-quux&foo=bar");
+
+    let AjaxDataSourceResponse = spyOn(window, 'AjaxDataSourceResponse');
+    ajaxGetPromise.resolveNow('xhr');
+    expect(AjaxDataSourceResponse).toHaveBeenCalledWith('xhr');
+  });
 });
 
 describe("AjaxDataSourceResponse", function() {
