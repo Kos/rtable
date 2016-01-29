@@ -2,7 +2,10 @@
 
 AJAX-powered table / data grid, powered by React and inspired by JQGrid.
 
-[See the demo](https://rawgit.com/Kos/rtable/3fd6638/demo.html)
+Demos: [Github API][github], [StackOverflow API][stack]
+
+[github]: https://cdn.rawgit.com/Kos/rtable/1b285b7b/demo.html
+[stack]:  https://cdn.rawgit.com/Kos/rtable/1b285b7b/demo2.html
 
 Design goals:
 
