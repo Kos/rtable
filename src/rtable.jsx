@@ -61,7 +61,7 @@ class RTable extends React.Component {
                 {filter.choices
                   ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.name)} defaultValue={this.state.initialFilterState[filter.name]}>
                       {filter.choices.map((choice, j) =>
-                        <option key={j} value={choice.value}>{choice.label || choice.value}</option>
+                        <FilterChoiceOption key={j} choice={choice} />
                       )}
                     </select>
                   : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.name)} defaultValue={this.state.initialFilterState[filter.name]} />
@@ -88,6 +88,21 @@ function PaginationInfo(props) {
     page {props.page} of {props.pages},
     results {props.firstResult}-{props.lastResult} of {props.count}
   </span>;
+}
+
+function FilterChoiceOption({choice}) {
+  if (choice === null) {
+    choice = {
+      label: "",
+      value: null
+    };
+  } else if (typeof choice !== "object") {
+    choice = {
+      label: choice.toString(),
+      value: choice.toString()
+    };
+  }
+  return <option value={choice.value}>{choice.label || choice.value}</option>;
 }
 
 class DataLoader {

@@ -20,9 +20,8 @@
       baseUrl: "https://api.stackexchange.com/2.2/users?site=stackoverflow",
       onResponse: function(response, dataRequest) {
         var data = response.json;
-        console.log(response, data);
         return {
-          count: null
+          count: null,
           next: data.has_more ? dataRequest.page + 1 : null,
           previous: dataRequest.page > 1 ? dataRequest.page - 1 : null,
           results: data.items || []
@@ -53,16 +52,10 @@
           {name: "website_url", label: "Website"},
         ],
         filters: [
-          // {'label': 'Path', 'name': 'path'},
-          // {'label': 'Version', 'name': 'sha', 'choices': [
-            // {value: 'master'},
-            // {value: 'gh-pages'},
-            // {value: '3.3.2'},
-            // {value: '3.3.1'},
-            // {value: '3.3.0'},
-            // {value: '3.2.5'},
-            // {value: '3.2.3'},
-          // ]},
+          {'label': 'Page size', 'name': 'pagesize', 'choices': [
+            // TODO respect the first choice if it's non null
+            null, 10, 30, 50
+          ]}
         ]
       }),
       document.getElementById('react-container')
