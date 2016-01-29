@@ -257,22 +257,15 @@ class AjaxDataSource {
   get(dataRequest) {
     let url = updateQueryStringMultiple(dataRequest.flatten(), this.baseUrl);
     return ajaxGet(url).then(xhr =>
-      this.onResponse(new AjaxDataSourceResponse(xhr)));
+      this.onResponse(new AjaxDataSourceResponse(xhr), dataRequest)
+    );
   }
 }
 
 class AjaxDataSourceResponse {
   constructor(xhr) {
     this.xhr = xhr;
-    this.json = null;
-    if ((this.xhr.getResponseHeader('content-type') || "").toLowerCase()
-        === 'application/json') {
-      try {
-        this.json = JSON.parse(xhr.responseText);
-      } catch(e) {
-        // ignore, leave null
-      }
-    }
+    this.json = this._tryLoadJson();
   }
   getUrlParamFromLinkHeader(param, rel) {
     let header = this.xhr.getResponseHeader('Link');
@@ -288,6 +281,18 @@ class AjaxDataSourceResponse {
   }
   getUrlParamFromURL(param, url) {
     return parseUri(url).queryKey[param];
+  }
+  _tryLoadJson() {
+    let ct = this.xhr.getResponseHeader('content-type');
+    if (!ct) return null;
+    ct = ct.toLowerCase();
+    ct = ct.split(";")[0].trim();  // ; charset=...
+    if (ct !== 'application/json') return null;
+    try {
+      return JSON.parse(this.xhr.responseText);
+    } catch(e) {
+      return null;
+    }
   }
 }
 

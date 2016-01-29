@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <title>RTable demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap-theme.min.css">
+  </head>
+  <body>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.6/react-with-addons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.6/react-dom.min.js"></script>
+    <script src="dist/rtable.js"></script>
+    <div class="container">
+      <h1><a href="https://github.com/Kos/rtable">RTable</a> demo</h1>
+      <p>Uses StackOverflow API as the example data source.</p>
+      <div id="react-container"</div>
+    </div>
+    <script>
+    var StackOverflowUsers = new AjaxDataSource({
+      baseUrl: "https://api.stackexchange.com/2.2/users?site=stackoverflow",
+      onResponse: function(response, dataRequest) {
+        var data = response.json;
+        console.log(response, data);
+        return {
+          count: 999, // TODO: make count optional
+          next: data.has_more ? dataRequest.page + 1 : null,
+          previous: dataRequest.page > 1 ? dataRequest.page - 1 : null,
+          results: data.items || []
+        };
+      }
+    });
+
+    function pre(str) {
+      return React.createElement('pre', { style: { 'whiteSpace': 'pre-wrap' }}, str);
+    }
+    function img(src, width) {
+      return React.createElement("img", { src: src, width: width });
+    }
+    function date(timestamp) {
+      var dateString = new Date(timestamp*1000).toDateString();
+      return React.createElement("span", { className: "date"}, [dateString]);
+    }
+
+
+    ReactDOM.render(
+      React.createElement(RTable, {
+        dataSource: StackOverflowUsers,
+        columns: [
+          {name: "author_avatar", label: "", get: function(user) { return user.profile_image ? img(user.profile_image) : ''; }},
+          {name: "display_name", label: "Name"},
+          {name: "reputation", label: "Reputation"},
+          {name: "last_access_date", label: "Last access", get: function(user) { return date(user.last_access_date); }},
+          {name: "website_url", label: "Website"},
+        ],
+        filters: [
+          // {'label': 'Path', 'name': 'path'},
+          // {'label': 'Version', 'name': 'sha', 'choices': [
+            // {value: 'master'},
+            // {value: 'gh-pages'},
+            // {value: '3.3.2'},
+            // {value: '3.3.1'},
+            // {value: '3.3.0'},
+            // {value: '3.2.5'},
+            // {value: '3.2.3'},
+          // ]},
+        ]
+      }),
+      document.getElementById('react-container')
+    );
+
+    </script>
+  </body>
+</html>

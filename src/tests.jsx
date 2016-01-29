@@ -262,9 +262,12 @@ describe("AjaxDataSource", function() {
     expect(ajaxGet).toHaveBeenCalledWith(
       "http://example.com/foo?page=1&ordering=-quux&foo=bar");
 
-    let AjaxDataSourceResponse = spyOn(window, 'AjaxDataSourceResponse');
+    let response = {};
+    let AjaxDataSourceResponse = spyOn(window, 'AjaxDataSourceResponse')
+      .and.returnValue(response);
     ajaxGetPromise.resolveNow('xhr');
     expect(AjaxDataSourceResponse).toHaveBeenCalledWith('xhr');
+    expect(params.onResponse).toHaveBeenCalledWith(response, dataRequest);
   });
 });
 
@@ -272,7 +275,7 @@ describe("AjaxDataSourceResponse", function() {
   it("should load json", function() {
     let jsonPayload = {foo: "bar"};
     let fakeXhr = {
-      getResponseHeader: () => "application/json",
+      getResponseHeader: () => "application/json; content-type=utf-8",
       responseText: JSON.stringify(jsonPayload)
     };
     let source = new AjaxDataSourceResponse(fakeXhr);

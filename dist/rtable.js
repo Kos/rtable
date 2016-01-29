@@ -1,6 +1,6 @@
 "use strict";
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -12,7 +12,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 /* global React */
 
-var RTable = function (_React$Component) {
+var RTable = (function (_React$Component) {
   _inherits(RTable, _React$Component);
 
   function RTable(props) {
@@ -163,9 +163,9 @@ var RTable = function (_React$Component) {
   }]);
 
   return RTable;
-}(React.Component);
+})(React.Component);
 
-var DataLoader = function () {
+var DataLoader = (function () {
   function DataLoader(component, dataSource) {
     var _this3 = this;
 
@@ -351,11 +351,11 @@ var DataLoader = function () {
   }]);
 
   return DataLoader;
-}();
+})();
 
 RTable.DataLoader = DataLoader;
 
-var DataRequest = function () {
+var DataRequest = (function () {
   function DataRequest(params) {
     _classCallCheck(this, DataRequest);
 
@@ -372,9 +372,9 @@ var DataRequest = function () {
   }]);
 
   return DataRequest;
-}();
+})();
 
-var DefaultDataSource = function () {
+var DefaultDataSource = (function () {
   // TODO implement on top of AjaxDataSource
 
   function DefaultDataSource(baseUrl) {
@@ -405,9 +405,9 @@ var DefaultDataSource = function () {
   }]);
 
   return DefaultDataSource;
-}();
+})();
 
-var AjaxDataSource = function () {
+var AjaxDataSource = (function () {
   function AjaxDataSource(_ref) {
     var baseUrl = _ref.baseUrl;
     var onResponse = _ref.onResponse;
@@ -425,27 +425,20 @@ var AjaxDataSource = function () {
 
       var url = updateQueryStringMultiple(dataRequest.flatten(), this.baseUrl);
       return ajaxGet(url).then(function (xhr) {
-        return _this6.onResponse(new AjaxDataSourceResponse(xhr));
+        return _this6.onResponse(new AjaxDataSourceResponse(xhr), dataRequest);
       });
     }
   }]);
 
   return AjaxDataSource;
-}();
+})();
 
-var AjaxDataSourceResponse = function () {
+var AjaxDataSourceResponse = (function () {
   function AjaxDataSourceResponse(xhr) {
     _classCallCheck(this, AjaxDataSourceResponse);
 
     this.xhr = xhr;
-    this.json = null;
-    if ((this.xhr.getResponseHeader('content-type') || "").toLowerCase() === 'application/json') {
-      try {
-        this.json = JSON.parse(xhr.responseText);
-      } catch (e) {
-        // ignore, leave null
-      }
-    }
+    this.json = this._tryLoadJson();
   }
 
   _createClass(AjaxDataSourceResponse, [{
@@ -467,10 +460,24 @@ var AjaxDataSourceResponse = function () {
     value: function getUrlParamFromURL(param, url) {
       return parseUri(url).queryKey[param];
     }
+  }, {
+    key: "_tryLoadJson",
+    value: function _tryLoadJson() {
+      var ct = this.xhr.getResponseHeader('content-type');
+      if (!ct) return null;
+      ct = ct.toLowerCase();
+      ct = ct.split(";")[0].trim(); // ; charset=...
+      if (ct !== 'application/json') return null;
+      try {
+        return JSON.parse(this.xhr.responseText);
+      } catch (e) {
+        return null;
+      }
+    }
   }]);
 
   return AjaxDataSourceResponse;
-}();
+})();
 
 function getJson(url) {
   return ajaxGet(url, 'json');
