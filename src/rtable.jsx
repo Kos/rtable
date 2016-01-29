@@ -45,8 +45,7 @@ class RTable extends React.Component {
               ? <a ref="paginationPrevious" className="btn btn-primary t-prev" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a>
               : <button ref="paginationPrevious" className="btn btn-primary t-prev" disabled>prev</button> }
             {' '}
-            page {this.state.page} of {this.state.pages},
-            results {this.state.firstResult}-{this.state.lastResult} of {this.state.count}
+            <PaginationInfo {...this.state} />
             {' '}
             {this.state.hasNext
               ? <a ref="paginationNext" className="btn btn-primary t-next" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
@@ -79,6 +78,16 @@ class RTable extends React.Component {
       </table>
     );
   }
+}
+
+function PaginationInfo(props) {
+  if (props.count === '?') {
+    return <span>page {props.page}</span>;
+  }
+  return <span>
+    page {props.page} of {props.pages},
+    results {props.firstResult}-{props.lastResult} of {props.count}
+  </span>;
 }
 
 class DataLoader {
@@ -184,8 +193,9 @@ class DataLoader {
     // (UI support needed too)
     let page = parseInt(dataRequest.page) || 1;
     let page0 = page - 1;
+    let haveCount = !isNullOrUndefined(dataResponse.count);
     let state = {
-      count: dataResponse.count,
+      count: haveCount ? dataResponse.count : '?',
       next: dataResponse.next,
       previous: dataResponse.previous,
       results: dataResponse.results,
@@ -197,15 +207,22 @@ class DataLoader {
       prevQuery: buildPageUrl(dataResponse.previous),
       ordering: dataRequest.ordering || null
     };
-    if (dataResponse.next) {
-      let pageSize = dataResponse.results.length;
-      state.pages = divideRoundUp(dataResponse.count, pageSize);
-      state.firstResult = pageSize * page0 + 1;
-      state.lastResult = pageSize * (page0+1);
+    if (haveCount) {
+      if (dataResponse.next) {
+        let pageSize = dataResponse.results.length;
+        state.firstResult = pageSize * page0 + 1;
+        state.lastResult = pageSize * (page0+1);
+        state.pages = divideRoundUp(dataResponse.count, pageSize);
+      } else {
+        state.lastResult = dataResponse.count;
+        state.firstResult = dataResponse.count - dataResponse.results.length + 1;
+        state.pages = page;
+      }
     } else {
-      state.pages = page;
-      state.lastResult = dataResponse.count;
-      state.firstResult = dataResponse.count - dataResponse.results.length + 1;
+      // We could calculate SOME numbers but not always
+      state.firstResult = '?';
+      state.lastResult = '?';
+      state.pages = '?';
     }
     return state;
   }

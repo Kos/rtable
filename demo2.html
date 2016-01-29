@@ -22,7 +22,7 @@
         var data = response.json;
         console.log(response, data);
         return {
-          count: 999, // TODO: make count optional
+          count: null
           next: data.has_more ? dataRequest.page + 1 : null,
           previous: dataRequest.page > 1 ? dataRequest.page - 1 : null,
           results: data.items || []

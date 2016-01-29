@@ -21,7 +21,7 @@
       baseUrl: 'https://api.github.com/repos/tomchristie/django-rest-framework/commits?per_page=10',
       onResponse: function(response) {
         return {
-          count: 999, // TODO: make count optional
+          count: null,
           next: response.getUrlParamFromLinkHeader('page', 'next'),
           previous: response.getUrlParamFromLinkHeader('page', 'prev'),
           results: response.json

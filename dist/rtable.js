@@ -93,16 +93,7 @@ var RTable = (function (_React$Component) {
                 "prev"
               ),
               ' ',
-              "page ",
-              this.state.page,
-              " of ",
-              this.state.pages,
-              ", results ",
-              this.state.firstResult,
-              "-",
-              this.state.lastResult,
-              " of ",
-              this.state.count,
+              React.createElement(PaginationInfo, this.state),
               ' ',
               this.state.hasNext ? React.createElement(
                 "a",
@@ -164,6 +155,31 @@ var RTable = (function (_React$Component) {
 
   return RTable;
 })(React.Component);
+
+function PaginationInfo(props) {
+  if (props.count === '?') {
+    return React.createElement(
+      "span",
+      null,
+      "page ",
+      props.page
+    );
+  }
+  return React.createElement(
+    "span",
+    null,
+    "page ",
+    props.page,
+    " of ",
+    props.pages,
+    ", results ",
+    props.firstResult,
+    "-",
+    props.lastResult,
+    " of ",
+    props.count
+  );
+}
 
 var DataLoader = (function () {
   function DataLoader(component, dataSource) {
@@ -323,8 +339,9 @@ var DataLoader = (function () {
       // (UI support needed too)
       var page = parseInt(dataRequest.page) || 1;
       var page0 = page - 1;
+      var haveCount = !isNullOrUndefined(dataResponse.count);
       var state = {
-        count: dataResponse.count,
+        count: haveCount ? dataResponse.count : '?',
         next: dataResponse.next,
         previous: dataResponse.previous,
         results: dataResponse.results,
@@ -336,15 +353,22 @@ var DataLoader = (function () {
         prevQuery: buildPageUrl(dataResponse.previous),
         ordering: dataRequest.ordering || null
       };
-      if (dataResponse.next) {
-        var pageSize = dataResponse.results.length;
-        state.pages = divideRoundUp(dataResponse.count, pageSize);
-        state.firstResult = pageSize * page0 + 1;
-        state.lastResult = pageSize * (page0 + 1);
+      if (haveCount) {
+        if (dataResponse.next) {
+          var pageSize = dataResponse.results.length;
+          state.firstResult = pageSize * page0 + 1;
+          state.lastResult = pageSize * (page0 + 1);
+          state.pages = divideRoundUp(dataResponse.count, pageSize);
+        } else {
+          state.lastResult = dataResponse.count;
+          state.firstResult = dataResponse.count - dataResponse.results.length + 1;
+          state.pages = page;
+        }
       } else {
-        state.pages = page;
-        state.lastResult = dataResponse.count;
-        state.firstResult = dataResponse.count - dataResponse.results.length + 1;
+        // We could calculate SOME numbers but not always
+        state.firstResult = '?';
+        state.lastResult = '?';
+        state.pages = '?';
       }
       return state;
     }
