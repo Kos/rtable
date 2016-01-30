@@ -9,13 +9,12 @@ Demos: [Github API][github], [StackOverflow API][stack]
 
 Design goals:
 
-- Easy to set up
-- Work out-of-the-box with json endpoints exposed by Django Rest Framework
+- Easy to set up and connect to any data source
 - Accessible:
     - page refresh and bookmarking works (url is updated as you navigate)
     - control-click on buttons works (navigation is normal links with extra JS on top)
 
-Status: *proof of concept*, needs testing and tidying up.
+Status: *proof of concept*, has some tests, needs a little tidying up still
 
 ## Features
 
@@ -25,36 +24,26 @@ Status: *proof of concept*, needs testing and tidying up.
 - [x] Filtering
 - [x] Window history
 - [ ] Theming (custom markup)
-- [ ] Arbitrary data sources
+- [x] Arbitrary data sources
 
 ## FAQ
 
 - What is it for?
 
-  - The main use case is displaying data that's fetched from somewhere one page
-    at a time, perhaps with server-side filtering and sorting.
+    - The main use case is displaying data that's fetched from somewhere one page
+      at a time, perhaps with server-side filtering and sorting.
 
 - Is it only for use in React apps?
+
     - Nah. You can use RTable in any page. You'll need to pull React and
       ReactDOM as dependencies, though.
 
-- Is it only for use with Django Rest Framework?
-    - Nah, it's easy to make it work with any data source. But by default, it
-      expects something like:
+- Can it display data from any API?
 
-      ```
-      GET /my/api/url/?page=1&ordering=name&country=pl
-
-      {
-        "count": 402,
-        "next": "... url of next page ..."
-        "previous": null,
-        "results": [
-          {"id": 321, "name": "Jacek Placek", "country": "pl"},
-          {"id": 567, "name": "Paweł Gaweł", "country": "pl"}
-        ]
-      }
-      ```
+    - RTable tries to make as few assumptions about your API as possible,
+      allowing you to define how results should be fetched and how the response
+      should be displayed. It doesn't even have to be an API: you could also
+      connect it to a local or procedurally generated data source.
 
 - Does it play well with Flux / Redux / <yet another hot architecture>?
 
@@ -68,38 +57,66 @@ Status: *proof of concept*, needs testing and tidying up.
 - [ ] Multi-column sorting
 - [ ] Multi-choice filtering
 - [ ] Advanced pagination (cursors)
-- [ ] Primary key column
 - [ ] URL param prefixing (allow multiple tables on same page)
 
 ## Howto
 
-### Basic use
+### Define a data source
 
-Given an AJAX endpoint `/api/data/` that returns a json like:
+A data source for RTable is any object that has a method `get()` that can be
+called as:
+
+    myDataSource.get({
+      page: 2,
+      ordering: 'name',
+      filters: {
+        'size': 10
+      }
+    });
+
+A data source should return a promise of a json that looks like:
 
     {
-      "count": 45,
-      "next": "https://example.com/api/data/?page=2",
-      "previous": null,
-      "results": [
-        {
-          id: 732,
-          foo: "Dilvish",
-          bar: "black"
-        },
-        {
-          id: 485,
-          foo: "Mahasamatman",
-          bar: "yellow"
-        }
+      "count": 20,     // total number of result objects or null
+      "next": 3,       // next page id or null
+      "previous": 1,   // previous page id or null
+      "results": [     // array of result objects
+        ...
       ]
     }
 
-create a component like:
+You can write your own or use the `AjaxDataSource` helper like so:
+
+    function myDataSource(baseUrl) {
+    return new AjaxDataSource({
+      baseUrl: baseUrl,
+      onResponse: function(response, dataRequest) {
+        // response.json
+        // response.xhr
+        return {
+          "count": ...,
+          "next": ...,
+          "previous": ...,
+          "results": [
+            ...
+          ]
+        }
+      }
+    });
+    }
+
+Different APIs use different "response envelope" formats to pass the metadata
+together with the data being served. The purpose of the `onResponse` function is
+to convert your particular API response into a common format recognised by
+RTable.
+
+### Display the RTable
+
+Create a RTable element like:
 
     ReactDOM.render(
       React.createElement(RTable, {
-        dataUrl: '/api/data/',
+        dataSource: myDataSource("/myapi/items/"),
         columns: [
           {'label': '#', 'name': 'id'},
           {'label': 'Name', 'name': 'foo'},
@@ -109,15 +126,13 @@ create a component like:
       document.getElementById('container')
     );
 
-### Columns
+### Specify columns
 
-```
-React.createElement(RTable, {
-  columns: [
-    ...
-  ]
-});
-```
+    React.createElement(RTable, {
+      columns: [
+        ...
+      ]
+    });
 
 Each column is defined as an object with these fields:
 
@@ -132,7 +147,7 @@ Each column is defined as an object with these fields:
 
 ...
 
-### Filters
+### Filtering
 
 There are 2 kinds of filters available:
 
@@ -141,13 +156,11 @@ There are 2 kinds of filters available:
 
 (There could be more! A checkbox might work nice)
 
-```
-React.createElement(RTable, {
-  filters: [
-    ...
-  ]
-});
-```
+    React.createElement(RTable, {
+      filters: [
+        ...
+      ]
+    });
 
 Each filter is defined as an object with these fields:
 
@@ -165,7 +178,3 @@ Each filter choice is defined as an object with these fields:
 | `label` | Optional. User-presentable text for this choice. Defaults to `value`.                                                                    |
 
 For choice filters, it makes sense to make an empty first choice, but it's not enforced.
-
-## Other data sources
-
-...

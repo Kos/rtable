@@ -1,10 +1,10 @@
 "use strict";
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -14,7 +14,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 /* global React */
 
-var RTable = (function (_React$Component) {
+var RTable = function (_React$Component) {
   _inherits(RTable, _React$Component);
 
   function RTable(props) {
@@ -152,7 +152,7 @@ var RTable = (function (_React$Component) {
   }]);
 
   return RTable;
-})(React.Component);
+}(React.Component);
 
 function PaginationInfo(props) {
   if (props.count === '?') {
@@ -200,7 +200,7 @@ function FilterChoiceOption(_ref) {
   );
 }
 
-var DataLoader = (function () {
+var DataLoader = function () {
   function DataLoader(component, dataSource) {
     var _this3 = this;
 
@@ -394,11 +394,11 @@ var DataLoader = (function () {
   }]);
 
   return DataLoader;
-})();
+}();
 
 RTable.DataLoader = DataLoader;
 
-var DataRequest = (function () {
+var DataRequest = function () {
   function DataRequest(params) {
     _classCallCheck(this, DataRequest);
 
@@ -415,9 +415,9 @@ var DataRequest = (function () {
   }]);
 
   return DataRequest;
-})();
+}();
 
-var DefaultDataSource = (function () {
+var DefaultDataSource = function () {
   // TODO implement on top of AjaxDataSource
 
   function DefaultDataSource(baseUrl) {
@@ -448,9 +448,9 @@ var DefaultDataSource = (function () {
   }]);
 
   return DefaultDataSource;
-})();
+}();
 
-var AjaxDataSource = (function () {
+var AjaxDataSource = function () {
   function AjaxDataSource(_ref2) {
     var baseUrl = _ref2.baseUrl;
     var onResponse = _ref2.onResponse;
@@ -474,9 +474,9 @@ var AjaxDataSource = (function () {
   }]);
 
   return AjaxDataSource;
-})();
+}();
 
-var AjaxDataSourceResponse = (function () {
+var AjaxDataSourceResponse = function () {
   function AjaxDataSourceResponse(xhr) {
     _classCallCheck(this, AjaxDataSourceResponse);
 
@@ -520,7 +520,7 @@ var AjaxDataSourceResponse = (function () {
   }]);
 
   return AjaxDataSourceResponse;
-})();
+}();
 
 function getJson(url) {
   return ajaxGet(url, 'json');
