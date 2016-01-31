@@ -88,21 +88,21 @@ A data source should return a promise of a json that looks like:
 You can write your own or use the `AjaxDataSource` helper like so:
 
     function myDataSource(baseUrl) {
-    return new AjaxDataSource({
-      baseUrl: baseUrl,
-      onResponse: function(response, dataRequest) {
-        // response.json
-        // response.xhr
-        return {
-          "count": ...,
-          "next": ...,
-          "previous": ...,
-          "results": [
-            ...
-          ]
+      return new AjaxDataSource({
+        baseUrl: baseUrl,
+        onResponse: function(response, dataRequest) {
+          // response.json
+          // response.xhr
+          return {
+            "count": ...,
+            "next": ...,
+            "previous": ...,
+            "results": [
+              ...
+            ]
+          }
         }
-      }
-    });
+      });
     }
 
 Different APIs use different "response envelope" formats to pass the metadata
@@ -128,6 +128,10 @@ Create a RTable element like:
 
 ### Specify columns
 
+Once you pull an array of items from your API, you'll normally want to display
+it in a tabular form. Columns allow to pick a part of each row's data,
+optionally transform it and present it in the table.
+
     React.createElement(RTable, {
       columns: [
         ...
@@ -136,11 +140,11 @@ Create a RTable element like:
 
 Each column is defined as an object with these fields:
 
-|  field  |                                                                                  meaning                                                                                   |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`  | Identifier name of the column                                                                                                                                              |
-| `label` | Optional. User-presentable name of the column. Will be used in the table header.<br>Defaults to `name`.                                                                    |
-| `get`   | Optional. Function that takes a single row (as JSON) and returns the column's value. Can return a string or a React component. <br> Defaults to `row => row[column.name]`. |
+|  field  |                                                                             meaning                                                                              |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`  | Identifier name of the column                                                                                                                                    |
+| `label` | Optional. User-presentable name of the column. Will be used in the table header.<br>Defaults to `name`.                                                          |
+| `get`   | Optional. Function that takes a single row and returns the column's value. Can return a string or a React component. <br> Defaults to `row => row[column.name]`. |
 
 
 ### Sorting
@@ -149,12 +153,18 @@ Each column is defined as an object with these fields:
 
 ### Filtering
 
+RTable allows to define "filters" that allow the user to narrow down the result
+set according to some parameter. Each filter is displayed as a form component.
+
 There are 2 kinds of filters available:
 
-- text: `<input type="text">`
-- choice: `<select>`
+- text: Allow the user to type any value to be filtered on. Displayed as an
+  `<input type="text">`.
+- choice: Have the user pick one of predefined values. Displayed as a `<select>`.
 
-(There could be more! A checkbox might work nice)
+Either way, the filter's value will be passed to the data source (unless it's null).
+
+API:
 
     React.createElement(RTable, {
       filters: [
@@ -177,4 +187,10 @@ Each filter choice is defined as an object with these fields:
 | `value` | Corresponds to the url parameter value that will be set when this choice is selected.<br>`null` means that this filter won't be applied. |
 | `label` | Optional. User-presentable text for this choice. Defaults to `value`.                                                                    |
 
-For choice filters, it makes sense to make an empty first choice, but it's not enforced.
+For choice filters, it generally makes sense to make an "empty" first choice,
+but it's not enforced.s
+
+Some shorthands are available:
+
+- '"somechoice"' expands to `{"value": "somechoice"}`
+- `null` expands to `{"value": null, "label": "}`
