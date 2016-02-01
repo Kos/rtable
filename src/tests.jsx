@@ -120,10 +120,13 @@ describe("RTable", function() {
   describe("rendering", function() {
     beforeEach(function() {
       this.renderWithData = function({props, results}) {
+        return this.renderWithResponse({props: props, response: {
+          'count': results.length, 'next': null, 'previous': null,
+          'results': results}});
+      };
+      this.renderWithResponse = function({props, response}) {
         let rtable = ReactTestUtils.renderIntoDocument(<RTable {...props} /> );
-        this.requests[0].respond({'count': results.length,
-                                  'next': null, 'previous': null,
-                                  'results': results});
+        this.requests[0].respond(response);
         return rtable;
       };
     });
@@ -240,7 +243,26 @@ describe("RTable", function() {
       expect(input.value).toEqual("f1value");
       expect(select.value).toEqual("f2value");
     });
-    it("should render pagination buttons");
+    xit("should render pagination buttons", function() {
+      // TODO properly mock calls to window.setState
+      let rtable = this.renderWithResponse({
+        props: {
+          dataUrl: "http://example.com/data",
+          columns: [],
+          filters: []
+        },
+        response: {
+          count: 10,
+          next: "nextPageId",
+          previous: "prevPageId",
+          results: [1, 2, 3]
+        }
+      });
+      let buttonNext = rtable.refs.paginationNext;
+      let buttonPrevious = rtable.refs.paginationPrevious;
+      expect(buttonNext.href).toEqual();
+      expect(buttonPrevious.href).toEqual();
+    });
   });
 });
 
