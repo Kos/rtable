@@ -72,7 +72,6 @@ var RTable = function (_React$Component) {
           cells
         );
       });
-
       return React.createElement(
         "table",
         { className: "table table-striped table-hover" },
@@ -351,7 +350,8 @@ var DataLoader = function () {
         return Math.floor((a + b - 1) / b);
       };
       var buildPageUrl = function buildPageUrl(page) {
-        return _this5.encodeWindowUrl(Object.assign(new DataRequest(dataRequest), { page: page }));
+        var nextDR = Object.assign(new DataRequest(dataRequest), { page: page });
+        return '?' + parseUri(_this5.encodeWindowUrl(nextDR)).query;
       };
       // TODO page ids should be opaque here.
       // don't special case 1, have the source support page null?

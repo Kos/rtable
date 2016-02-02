@@ -32,6 +32,7 @@ describe("RTable", function() {
         return window.updateQueryStringMultiple(flatDataRequest, '/api');
       }
     });
+    spyOn(window.history, 'replaceState');
   });
 
   describe("interactivity", function() {
@@ -243,8 +244,9 @@ describe("RTable", function() {
       expect(input.value).toEqual("f1value");
       expect(select.value).toEqual("f2value");
     });
-    xit("should render pagination buttons", function() {
-      // TODO properly mock calls to window.setState
+    it("should render pagination buttons", function() {
+      let location = "http://example.com/?unrelated=bar";
+      spyOn(window.DataLoader.prototype, 'getWindowLocation').and.returnValue(location);
       let rtable = this.renderWithResponse({
         props: {
           dataUrl: "http://example.com/data",
@@ -260,8 +262,10 @@ describe("RTable", function() {
       });
       let buttonNext = rtable.refs.paginationNext;
       let buttonPrevious = rtable.refs.paginationPrevious;
-      expect(buttonNext.href).toEqual();
-      expect(buttonPrevious.href).toEqual();
+      expect(buttonNext.href).toContain("?unrelated=bar&page=nextPageId");
+      expect(buttonPrevious.href).toContain("?unrelated=bar&page=prevPageId");
+      // TODO expect them to be relative links - buttonNext.href is absolute,
+      // even though relative is rendered (?)
     });
   });
 });

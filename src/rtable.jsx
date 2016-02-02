@@ -36,7 +36,6 @@ class RTable extends React.Component {
       );
       return <tr key={m}>{cells}</tr>;
     });
-
     return (
       <table className="table table-striped table-hover">
         <thead>
@@ -201,8 +200,10 @@ class DataLoader {
   }
   buildStateFromResponse(dataResponse, dataRequest) {
     let divideRoundUp = (a, b) => Math.floor((a+b-1)/b);
-    let buildPageUrl = page => this.encodeWindowUrl(Object.assign(
-      new DataRequest(dataRequest), {page}));
+    let buildPageUrl = page => {
+      let nextDR = Object.assign(new DataRequest(dataRequest), {page});
+      return '?' + parseUri(this.encodeWindowUrl(nextDR)).query;
+    };
     // TODO page ids should be opaque here.
     // don't special case 1, have the source support page null?
     // (UI support needed too)
