@@ -50,10 +50,16 @@ var RTable = function (_React$Component) {
 
       var filters = this.props.filters || [];
       var columns = this.props.columns || [];
+      var ordering = this.props.ordering || [];
+      var isOrderable = function isOrderable(colName) {
+        return ordering === "all" || ordering.some(function (x) {
+          return x === colName;
+        });
+      };
       var header = columns.map(function (col, n) {
         return React.createElement(
           "th",
-          { key: n, onClick: _this2.loader.fn.orderToggle(col.name) },
+          { key: n, onClick: isOrderable(col.name) ? _this2.loader.fn.orderToggle(col.name) : null },
           col.label || col.name,
           _this2.state.ordering === col.name ? "▲" : _this2.state.ordering === "-" + col.name ? "▼" : null
         );

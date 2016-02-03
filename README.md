@@ -64,7 +64,7 @@ Status: *proof of concept*, has some tests, needs a little tidying up still
 ### Define a data source
 
 A data source for RTable is any object that has a method `get()` that can be
-called as:
+called with a data request, as:
 
     myDataSource.get({
       page: 2,
@@ -147,9 +147,34 @@ Each column is defined as an object with these fields:
 | `get`   | Optional. Function that takes a single row and returns the column's value. Can return a string or a React component. <br> Defaults to `row => row[column.name]`. |
 
 
-### Sorting
+### Ordering
 
-...
+RTable lets the user to sort a table by clicking a column header. Clicking again
+toggles between ascending and descending. In order to enable it, you should
+specify which columns should be allowed to order by.
+
+API:
+
+    React.createElement(RTable, {
+      columns: [
+        {"name": "foo", ...}
+        {"name": "bar", ...}
+      ],
+      ordering: ["foo", "bar"]
+    });
+
+The name of the column selected for ordering will be passed to the DataSource as:
+
+`"ordering": "foo" for ascending,
+`"ordering": "-foo" for descending.
+
+You can also allow to sort by all columns, instead of listing them:
+
+    React.createElement(RTable, {
+      ...
+      ordering: "all"
+    });
+
 
 ### Filtering
 

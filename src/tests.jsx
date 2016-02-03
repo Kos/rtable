@@ -61,7 +61,7 @@ describe("RTable", function() {
       expect(this.requests[1].url).toEqual('/api?page=2');
     });
     it("should sort", function() {
-      UI.create({"columns": [{"name": "foo", "label": "Foo"}]});
+      UI.create({"columns": [{"name": "foo", "label": "Foo"}], "ordering": "all"});
       expect(this.requests[0].url).toEqual('/api?page=1');
       this.requests[0].respond({
         count: 10, next: "/api?page=2", previous: null, results: rows(5)

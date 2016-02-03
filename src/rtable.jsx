@@ -21,8 +21,10 @@ class RTable extends React.Component {
   render() {
     let filters = this.props.filters || [];
     let columns = this.props.columns || [];
+    let ordering = this.props.ordering || [];
+    let isOrderable = colName => (ordering === "all" || ordering.some(x => x === colName));
     let header = columns.map((col, n) =>
-      <th key={n} onClick={this.loader.fn.orderToggle(col.name)}>
+      <th key={n} onClick={isOrderable(col.name) ? this.loader.fn.orderToggle(col.name) : null}>
         {col.label || col.name}
         {this.state.ordering === col.name ? "\u25B2" :
          this.state.ordering === "-"+col.name ? "\u25BC" :
