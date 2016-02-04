@@ -23,7 +23,7 @@
     "templateStrings": true,
     "unicodeCodePointEscapes": true,
 
-    "modules": false,
+    "modules": true,
     "globalReturn": false,
     "octalLiterals": false,
   },

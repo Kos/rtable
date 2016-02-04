@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "description": "AJAX-powered table / data grid, powered by React and inspired by JQGrid.",
   "scripts": {
-    "test": "karma start --single-run",
+    "test": "karma start --single-run && npm run mocha",
+    "mocha": "mocha --compilers js:babel-core/register",
     "karma": "karma start",
     "build": "babel src/rtable.jsx -o dist/rtable.js",
     "lint": "eslint src/*",
-
     "prebuild": "npm run test",
     "pretest": "npm run lint"
   },
@@ -25,6 +25,8 @@
     "babel-cli": "^6.3.17",
     "bootstrap": "^3.3.6",
     "eslint": "^1.10.3",
+    "expect": "^1.14.0",
+    "expect-jsx": "^2.3.0",
     "jasmine-core": "^2.4.1",
     "karma": "^0.13.16",
     "karma-babel-preprocessor": "^6.0.1",
@@ -32,6 +34,7 @@
     "karma-firefox-launcher": "^0.1.7",
     "karma-jasmine": "^0.3.6",
     "karma-sinon": "^1.0.4",
+    "mocha": "^2.4.5",
     "sinon": "^1.17.2"
   },
   "dependencies": {
