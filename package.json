@@ -3,13 +3,15 @@
   "version": "0.0.0",
   "description": "AJAX-powered table / data grid, powered by React and inspired by JQGrid.",
   "scripts": {
-    "test": "karma start --single-run && npm run mocha",
-    "mocha": "mocha --compilers js:babel-core/register",
     "karma": "karma start",
-    "build": "babel src/rtable.jsx -o dist/rtable.js",
+    "mocha": "mocha --compilers js:babel-core/register",
     "lint": "eslint src/*",
+    "rollup": "rollup -c",
+
     "prebuild": "npm run test",
-    "pretest": "npm run lint"
+    "build": "npm run rollup",
+    "pretest": "npm run lint",
+    "test": "karma start --single-run && npm run mocha"
   },
   "repository": {
     "type": "git",
@@ -23,6 +25,7 @@
   "homepage": "https://github.com/Kos/rtable#readme",
   "devDependencies": {
     "babel-cli": "^6.3.17",
+    "babel-preset-es2015-rollup": "^1.1.1",
     "bootstrap": "^3.3.6",
     "eslint": "^1.10.3",
     "expect": "^1.14.0",
@@ -35,6 +38,8 @@
     "karma-jasmine": "^0.3.6",
     "karma-sinon": "^1.0.4",
     "mocha": "^2.4.5",
+    "rollup": "^0.25.2",
+    "rollup-plugin-babel": "^2.3.9",
     "sinon": "^1.17.2"
   },
   "dependencies": {

@@ -16,7 +16,7 @@
       <div id="react-container"</div>
     </div>
     <script>
-    var GithubCommits = new AjaxDataSource({
+    var GithubCommits = new RTable.AjaxDataSource({
       baseUrl: 'https://api.github.com/repos/tomchristie/django-rest-framework/commits?per_page=10',
       onResponse: function(response) {
         return {

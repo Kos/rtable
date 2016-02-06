@@ -16,7 +16,7 @@
       <div id="react-container"</div>
     </div>
     <script>
-    var StackOverflowUsers = new AjaxDataSource({
+    var StackOverflowUsers = new RTable.AjaxDataSource({
       baseUrl: "https://api.stackexchange.com/2.2/users?site=stackoverflow",
       onResponse: function(response, dataRequest) {
         var data = response.json;

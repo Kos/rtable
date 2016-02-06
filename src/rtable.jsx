@@ -1,14 +1,14 @@
 /* global React */
-import {parseUri, updateQueryStringMultiple} from 'UrlUtils';
+import {parseUri, updateQueryStringMultiple} from './UrlUtils';
 
-class RTable extends React.Component {
+export default class RTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       results: []
     };
     let dataSource = this.props.dataSource || new DefaultDataSource(this.props.dataUrl);
-    this.loader = new RTable.DataLoader(this, dataSource);
+    this.loader = new DataLoader(this, dataSource);
   }
   componentWillMount() {
     this.loader.loadInitial();
@@ -247,8 +247,6 @@ class DataLoader {
   }
 }
 
-RTable.DataLoader = DataLoader;
-
 class DataRequest {
   constructor(params) {
     Object.assign(this, params);
@@ -285,7 +283,7 @@ class DefaultDataSource {
   }
 }
 
-export class AjaxDataSource {
+class AjaxDataSource {
   constructor({baseUrl, onResponse}) {
     this.baseUrl = baseUrl;
     this.onResponse = onResponse;
@@ -297,6 +295,8 @@ export class AjaxDataSource {
     );
   }
 }
+
+RTable.AjaxDataSource = AjaxDataSource;
 
 class AjaxDataSourceResponse {
   constructor(xhr) {
