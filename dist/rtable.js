@@ -1,8 +1,5 @@
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global.RTable = factory());
-}(this, function () { 'use strict';
+var RTable = (function () {
+  'use strict';
 
   var babelHelpers = {};
   babelHelpers.typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
@@ -136,6 +133,144 @@
     return url;
   }
 
+  function isNullOrUndefined(x) {
+    return x == null; // eslint-disable-line eqeqeq
+  }
+
+  var AjaxDataSource = function () {
+    function AjaxDataSource(_ref) {
+      var baseUrl = _ref.baseUrl;
+      var onResponse = _ref.onResponse;
+      babelHelpers.classCallCheck(this, AjaxDataSource);
+
+      this.baseUrl = baseUrl;
+      this.onResponse = onResponse;
+    }
+
+    babelHelpers.createClass(AjaxDataSource, [{
+      key: 'get',
+      value: function get(dataRequest) {
+        var _this = this;
+
+        var url = updateQueryStringMultiple(dataRequest.flatten(), this.baseUrl);
+        return ajaxGet(url).then(function (xhr) {
+          return _this.onResponse(new AjaxDataSourceResponse(xhr), dataRequest);
+        });
+      }
+    }]);
+    return AjaxDataSource;
+  }();
+
+  var AjaxDataSourceResponse = function () {
+    function AjaxDataSourceResponse(xhr) {
+      babelHelpers.classCallCheck(this, AjaxDataSourceResponse);
+
+      this.xhr = xhr;
+      this.json = this._tryLoadJson();
+    }
+
+    babelHelpers.createClass(AjaxDataSourceResponse, [{
+      key: 'getUrlParamFromLinkHeader',
+      value: function getUrlParamFromLinkHeader(param, rel) {
+        var header = this.xhr.getResponseHeader('Link');
+        var linkRegex = /<([^>]+)>; rel="(\w+)"/g;
+        for (var groups; groups = linkRegex.exec(header);) {
+          var thisURL = groups[1];
+          var thisRel = groups[2];
+          if (thisRel === rel) {
+            return this.getUrlParamFromURL(param, thisURL);
+          }
+        }
+        return null;
+      }
+    }, {
+      key: 'getUrlParamFromURL',
+      value: function getUrlParamFromURL(param, url) {
+        return parseUri(url).queryKey[param];
+      }
+    }, {
+      key: '_tryLoadJson',
+      value: function _tryLoadJson() {
+        var ct = this.xhr.getResponseHeader('content-type');
+        if (!ct) return null;
+        ct = ct.toLowerCase();
+        ct = ct.split(";")[0].trim(); // ; charset=...
+        if (ct !== 'application/json') return null;
+        try {
+          return JSON.parse(this.xhr.responseText);
+        } catch (e) {
+          return null;
+        }
+      }
+    }]);
+    return AjaxDataSourceResponse;
+  }();
+
+  var DefaultDataSource = function () {
+    // TODO implement on top of AjaxDataSource
+
+    function DefaultDataSource(baseUrl) {
+      babelHelpers.classCallCheck(this, DefaultDataSource);
+
+      this.baseUrl = baseUrl;
+      // TODO this is a good place to allow to override how 'page' and 'ordering'
+      // params are passed to the backend.
+    }
+
+    babelHelpers.createClass(DefaultDataSource, [{
+      key: 'get',
+      value: function get(dataRequest) {
+        var url = this.baseUrl;
+        url = updateQueryStringMultiple(dataRequest.flatten(), url);
+        return getJson(url).then(function (dataResponse) {
+          if (!isNullOrUndefined(dataResponse.next)) {
+            dataResponse.next = parseUri(dataResponse.next).queryKey.page;
+          }
+          if (!isNullOrUndefined(dataResponse.previous)) {
+            // HACK: if there's a previous URL but the page param itself is missing,
+            // default to 1. DRF likes to drop the ?page=1
+            dataResponse.previous = parseUri(dataResponse.previous).queryKey.page || 1;
+          }
+          return dataResponse;
+        });
+      }
+    }]);
+    return DefaultDataSource;
+  }();
+
+  function getJson(url) {
+    return ajaxGet(url, 'json');
+  }
+
+  function ajaxGet(url) {
+    var res = arguments.length <= 1 || arguments[1] === undefined ? 'xhr' : arguments[1];
+
+    var request = new XMLHttpRequest();
+    return new Promise(function (resolve, reject) {
+      request.open('GET', url, true);
+      request.onreadystatechange = function () {
+        if (this.readyState !== 4) {
+          return;
+        }
+        if (this.status >= 200 && this.status < 400) {
+          try {
+            if (res === 'json') {
+              // TODO drop res, handle json in caller
+              resolve(JSON.parse(this.responseText), this);
+            } else {
+              resolve(this);
+            }
+          } catch (e) {
+            reject(e);
+          }
+        } else {
+          reject(this);
+        }
+      };
+      request.send();
+    });
+  }
+
   var RTable = function (_React$Component) {
     babelHelpers.inherits(RTable, _React$Component);
 
@@ -153,12 +288,12 @@
     }
 
     babelHelpers.createClass(RTable, [{
-      key: "componentWillMount",
+      key: 'componentWillMount',
       value: function componentWillMount() {
         this.loader.loadInitial();
       }
     }, {
-      key: "getValue",
+      key: 'getValue',
       value: function getValue(row, col) {
         if (col.get) {
           return col.get(row);
@@ -166,7 +301,7 @@
         return row[col.name];
       }
     }, {
-      key: "render",
+      key: 'render',
       value: function render() {
         var _this2 = this;
 
@@ -180,98 +315,98 @@
         };
         var header = columns.map(function (col, n) {
           return React.createElement(
-            "th",
+            'th',
             { key: n, onClick: isOrderable(col.name) ? _this2.loader.fn.orderToggle(col.name) : null },
             col.label || col.name,
-            _this2.state.ordering === col.name ? "▲" : _this2.state.ordering === "-" + col.name ? "▼" : null
+            _this2.state.ordering === col.name ? '▲' : _this2.state.ordering === "-" + col.name ? '▼' : null
           );
         });
         var rows = this.state.results.map(function (row, m) {
           var cells = _this2.props.columns.map(function (col, n) {
             return React.createElement(
-              "td",
+              'td',
               { key: n },
               _this2.getValue(row, col)
             );
           });
           return React.createElement(
-            "tr",
+            'tr',
             { key: m },
             cells
           );
         });
         return React.createElement(
-          "table",
-          { className: "table table-striped table-hover" },
+          'table',
+          { className: 'table table-striped table-hover' },
           React.createElement(
-            "thead",
+            'thead',
             null,
             React.createElement(
-              "tr",
+              'tr',
               null,
               React.createElement(
-                "td",
-                { ref: "paginationContainer", className: "text-center", colSpan: columns.length },
+                'td',
+                { ref: 'paginationContainer', className: 'text-center', colSpan: columns.length },
                 this.state.hasPrev ? React.createElement(
-                  "a",
-                  { ref: "paginationPrevious", className: "btn btn-primary t-prev", href: this.state.prevQuery, onClick: this.loader.fn.prevPage },
-                  "prev"
+                  'a',
+                  { ref: 'paginationPrevious', className: 'btn btn-primary t-prev', href: this.state.prevQuery, onClick: this.loader.fn.prevPage },
+                  'prev'
                 ) : React.createElement(
-                  "button",
-                  { ref: "paginationPrevious", className: "btn btn-primary t-prev", disabled: true },
-                  "prev"
+                  'button',
+                  { ref: 'paginationPrevious', className: 'btn btn-primary t-prev', disabled: true },
+                  'prev'
                 ),
                 ' ',
                 React.createElement(PaginationInfo, this.state),
                 ' ',
                 this.state.hasNext ? React.createElement(
-                  "a",
-                  { ref: "paginationNext", className: "btn btn-primary t-next", href: this.state.nextQuery, onClick: this.loader.fn.nextPage },
-                  "next"
+                  'a',
+                  { ref: 'paginationNext', className: 'btn btn-primary t-next', href: this.state.nextQuery, onClick: this.loader.fn.nextPage },
+                  'next'
                 ) : React.createElement(
-                  "button",
-                  { ref: "paginationNext", className: "btn btn-primary t-next", disabled: true },
-                  "next"
+                  'button',
+                  { ref: 'paginationNext', className: 'btn btn-primary t-next', disabled: true },
+                  'next'
                 )
               )
             ),
             React.createElement(
-              "tr",
-              { ref: "filterRow" },
+              'tr',
+              { ref: 'filterRow' },
               React.createElement(
-                "td",
-                { className: "form-inline", colSpan: columns.length },
+                'td',
+                { className: 'form-inline', colSpan: columns.length },
                 filters.map(function (filter, i) {
                   return React.createElement(
-                    "span",
+                    'span',
                     { key: i },
                     React.createElement(
-                      "label",
+                      'label',
                       null,
                       filter.label + ':'
                     ),
                     ' ',
                     filter.choices ? React.createElement(
-                      "select",
-                      { className: "form-control input-sm ", onInput: _this2.loader.fn.filter(filter.name), defaultValue: _this2.state.initialFilterState[filter.name] },
+                      'select',
+                      { className: 'form-control input-sm ', onInput: _this2.loader.fn.filter(filter.name), defaultValue: _this2.state.initialFilterState[filter.name] },
                       filter.choices.map(function (choice, j) {
                         return React.createElement(FilterChoiceOption, { key: j, choice: choice });
                       })
-                    ) : React.createElement("input", { className: "form-control input-sm", onInput: _this2.loader.fn.filterDelayed(filter.name), defaultValue: _this2.state.initialFilterState[filter.name] }),
+                    ) : React.createElement('input', { className: 'form-control input-sm', onInput: _this2.loader.fn.filterDelayed(filter.name), defaultValue: _this2.state.initialFilterState[filter.name] }),
                     ' '
                   );
                 })
               )
             ),
             React.createElement(
-              "tr",
-              { ref: "columnHeaderRow" },
+              'tr',
+              { ref: 'columnHeaderRow' },
               header
             )
           ),
           React.createElement(
-            "tbody",
-            { ref: "rowContainer" },
+            'tbody',
+            { ref: 'rowContainer' },
             rows
           )
         );
@@ -284,24 +419,24 @@
     // eslint-disable-line no-unused-vars
     if (props.count === '?') {
       return React.createElement(
-        "span",
+        'span',
         null,
-        "page ",
+        'page ',
         props.page
       );
     }
     return React.createElement(
-      "span",
+      'span',
       null,
-      "page ",
+      'page ',
       props.page,
-      " of ",
+      ' of ',
       props.pages,
-      ", results ",
+      ', results ',
       props.firstResult,
-      "-",
+      '-',
       props.lastResult,
-      " of ",
+      ' of ',
       props.count
     );
   }
@@ -314,14 +449,14 @@
         label: "",
         value: null
       };
-    } else if ((typeof choice === "undefined" ? "undefined" : babelHelpers.typeof(choice)) !== "object") {
+    } else if ((typeof choice === 'undefined' ? 'undefined' : babelHelpers.typeof(choice)) !== "object") {
       choice = {
         label: choice.toString(),
         value: choice.toString()
       };
     }
     return React.createElement(
-      "option",
+      'option',
       { value: choice.value },
       choice.label || choice.value
     );
@@ -364,7 +499,7 @@
     }
 
     babelHelpers.createClass(DataLoader, [{
-      key: "loadInitial",
+      key: 'loadInitial',
       value: function loadInitial() {
         var initialDataRequest = this.decodeWindowUrl();
         this.component.setState({
@@ -373,17 +508,17 @@
         this.loadFromSource(initialDataRequest);
       }
     }, {
-      key: "getWindowLocation",
+      key: 'getWindowLocation',
       value: function getWindowLocation() {
         return window.location.href;
       }
     }, {
-      key: "currentState",
+      key: 'currentState',
       value: function currentState() {
         return this.component.state;
       }
     }, {
-      key: "loadWithUpdatedParams",
+      key: 'loadWithUpdatedParams',
       value: function loadWithUpdatedParams(newParams) {
         var state = this.currentState();
         var newDataRequest = new DataRequest({
@@ -397,12 +532,12 @@
         return this.loadFromSource(newDataRequest);
       }
     }, {
-      key: "encodeWindowUrl",
+      key: 'encodeWindowUrl',
       value: function encodeWindowUrl(dataRequest) {
         return updateQueryStringMultiple(dataRequest.flatten(), this.getWindowLocation());
       }
     }, {
-      key: "decodeWindowUrl",
+      key: 'decodeWindowUrl',
       value: function decodeWindowUrl() {
         var data = parseUri(this.getWindowLocation()).queryKey;
         var initialFilterState = data;
@@ -414,7 +549,7 @@
         });
       }
     }, {
-      key: "loadFromSource",
+      key: 'loadFromSource',
       value: function loadFromSource(dataRequest) {
         var _this4 = this;
 
@@ -425,31 +560,31 @@
         });
       }
     }, {
-      key: "goToPage",
+      key: 'goToPage',
       value: function goToPage(event, page) {
         if (event.ctrlKey || event.altKey || event.shiftKey) return;
         event.preventDefault();
         return this.loadWithUpdatedParams({ page: page });
       }
     }, {
-      key: "nextPage",
+      key: 'nextPage',
       value: function nextPage(event) {
         return this.goToPage(event, this.currentState().page + 1);
       }
     }, {
-      key: "prevPage",
+      key: 'prevPage',
       value: function prevPage(event) {
         return this.goToPage(event, this.currentState().page - 1);
       }
     }, {
-      key: "orderBy",
+      key: 'orderBy',
       value: function orderBy(event, ordering) {
         if (event.ctrlKey || event.altKey || event.shiftKey) return;
         event.preventDefault();
         return this.loadWithUpdatedParams({ ordering: ordering });
       }
     }, {
-      key: "orderToggle",
+      key: 'orderToggle',
       value: function orderToggle(event, ordering) {
         if (!ordering.length) {
           return;
@@ -464,13 +599,13 @@
         return this.orderBy(event, ordering);
       }
     }, {
-      key: "filter",
+      key: 'filter',
       value: function filter(event, key) {
         var newFilterValue = event.target.value || null;
         return this.loadWithUpdatedParams({ filters: babelHelpers.defineProperty({}, key, newFilterValue) });
       }
     }, {
-      key: "buildStateFromResponse",
+      key: 'buildStateFromResponse',
       value: function buildStateFromResponse(dataResponse, dataRequest) {
         var _this5 = this;
 
@@ -531,7 +666,7 @@
     }
 
     babelHelpers.createClass(DataRequest, [{
-      key: "flatten",
+      key: 'flatten',
       value: function flatten() {
         // TODO if we're relying on flatten so much,
         // what's the benefit of having filters un-flattened by default?
@@ -541,141 +676,7 @@
     return DataRequest;
   }();
 
-  var DefaultDataSource = function () {
-    // TODO implement on top of AjaxDataSource
-
-    function DefaultDataSource(baseUrl) {
-      babelHelpers.classCallCheck(this, DefaultDataSource);
-
-      this.baseUrl = baseUrl;
-      // TODO this is a good place to allow to override how 'page' and 'ordering'
-      // params are passed to the backend.
-    }
-
-    babelHelpers.createClass(DefaultDataSource, [{
-      key: "get",
-      value: function get(dataRequest) {
-        var url = this.baseUrl;
-        url = updateQueryStringMultiple(dataRequest.flatten(), url);
-        return getJson(url).then(function (dataResponse) {
-          if (!isNullOrUndefined(dataResponse.next)) {
-            dataResponse.next = parseUri(dataResponse.next).queryKey.page;
-          }
-          if (!isNullOrUndefined(dataResponse.previous)) {
-            // HACK: if there's a previous URL but the page param itself is missing,
-            // default to 1. DRF likes to drop the ?page=1
-            dataResponse.previous = parseUri(dataResponse.previous).queryKey.page || 1;
-          }
-          return dataResponse;
-        });
-      }
-    }]);
-    return DefaultDataSource;
-  }();
-
-  var AjaxDataSource = function () {
-    function AjaxDataSource(_ref2) {
-      var baseUrl = _ref2.baseUrl;
-      var onResponse = _ref2.onResponse;
-      babelHelpers.classCallCheck(this, AjaxDataSource);
-
-      this.baseUrl = baseUrl;
-      this.onResponse = onResponse;
-    }
-
-    babelHelpers.createClass(AjaxDataSource, [{
-      key: "get",
-      value: function get(dataRequest) {
-        var _this6 = this;
-
-        var url = updateQueryStringMultiple(dataRequest.flatten(), this.baseUrl);
-        return ajaxGet(url).then(function (xhr) {
-          return _this6.onResponse(new AjaxDataSourceResponse(xhr), dataRequest);
-        });
-      }
-    }]);
-    return AjaxDataSource;
-  }();
-
   RTable.AjaxDataSource = AjaxDataSource;
-
-  var AjaxDataSourceResponse = function () {
-    function AjaxDataSourceResponse(xhr) {
-      babelHelpers.classCallCheck(this, AjaxDataSourceResponse);
-
-      this.xhr = xhr;
-      this.json = this._tryLoadJson();
-    }
-
-    babelHelpers.createClass(AjaxDataSourceResponse, [{
-      key: "getUrlParamFromLinkHeader",
-      value: function getUrlParamFromLinkHeader(param, rel) {
-        var header = this.xhr.getResponseHeader('Link');
-        var linkRegex = /<([^>]+)>; rel="(\w+)"/g;
-        for (var groups; groups = linkRegex.exec(header);) {
-          var thisURL = groups[1];
-          var thisRel = groups[2];
-          if (thisRel === rel) {
-            return this.getUrlParamFromURL(param, thisURL);
-          }
-        }
-        return null;
-      }
-    }, {
-      key: "getUrlParamFromURL",
-      value: function getUrlParamFromURL(param, url) {
-        return parseUri(url).queryKey[param];
-      }
-    }, {
-      key: "_tryLoadJson",
-      value: function _tryLoadJson() {
-        var ct = this.xhr.getResponseHeader('content-type');
-        if (!ct) return null;
-        ct = ct.toLowerCase();
-        ct = ct.split(";")[0].trim(); // ; charset=...
-        if (ct !== 'application/json') return null;
-        try {
-          return JSON.parse(this.xhr.responseText);
-        } catch (e) {
-          return null;
-        }
-      }
-    }]);
-    return AjaxDataSourceResponse;
-  }();
-
-  function getJson(url) {
-    return ajaxGet(url, 'json');
-  }
-
-  function ajaxGet(url) {
-    var res = arguments.length <= 1 || arguments[1] === undefined ? 'xhr' : arguments[1];
-
-    var request = new XMLHttpRequest();
-    return new Promise(function (resolve, reject) {
-      request.open('GET', url, true);
-      request.onreadystatechange = function () {
-        if (this.readyState !== 4) {
-          return;
-        }
-        if (this.status >= 200 && this.status < 400) {
-          try {
-            if (res === 'json') {
-              // TODO drop res, handle json in caller
-              resolve(JSON.parse(this.responseText), this);
-            } else {
-              resolve(this);
-            }
-          } catch (e) {
-            reject(e);
-          }
-        } else {
-          reject(this);
-        }
-      };
-      request.send();
-    });
-  }
 
   function delayed(delay, fn) {
     var timeout = null;
@@ -691,10 +692,6 @@
     };
   }
 
-  function isNullOrUndefined(x) {
-    return x == null; // eslint-disable-line eqeqeq
-  }
-
   return RTable;
 
-}));
+}());

@@ -4,14 +4,14 @@
   "description": "AJAX-powered table / data grid, powered by React and inspired by JQGrid.",
   "scripts": {
     "karma": "karma start",
+    "karma1": "karma start --single-run",
     "mocha": "mocha --compilers js:babel-core/register",
-    "lint": "eslint src/*",
+    "lint": "eslint src/*.js* test/*.js*",
     "rollup": "rollup -c",
-
     "prebuild": "npm run test",
     "build": "npm run rollup",
     "pretest": "npm run lint",
-    "test": "karma start --single-run && npm run mocha"
+    "test": "npm run mocha"
   },
   "repository": {
     "type": "git",
@@ -40,7 +40,7 @@
     "mocha": "^2.4.5",
     "rollup": "^0.25.2",
     "rollup-plugin-babel": "^2.3.9",
-    "sinon": "^1.17.2"
+    "sinon": "^1.17.3"
   },
   "dependencies": {
     "react": "^0.14.6",
