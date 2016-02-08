@@ -1,5 +1,7 @@
-var RTable = (function () {
+var RTable = (function (React) {
   'use strict';
+
+  React = 'default' in React ? React['default'] : React;
 
   var babelHelpers = {};
   babelHelpers.typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
@@ -699,4 +701,4 @@ var RTable = (function () {
 
   return RTable;
 
-}());
+}(React));

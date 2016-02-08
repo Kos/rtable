@@ -7,7 +7,8 @@
     "karma1": "karma start --single-run",
     "mocha": "mocha --compilers js:babel-core/register",
     "lint": "eslint src/*.js* test/*.js*",
-    "rollup": "rollup -c",
+    "rollup": "rollup -c && rollup -c -o dist/rtable.es6.js -f es6",
+
     "prebuild": "npm run test",
     "build": "npm run rollup",
     "pretest": "npm run lint",

@@ -7,5 +7,9 @@ export default {
   moduleName: 'RTable',
   plugins: [babel({
     "presets": ["es2015-rollup", "react"]
-  })]
+  })],
+  external: ['React'],
+  globals: {
+    React: 'React'
+  }
 };
