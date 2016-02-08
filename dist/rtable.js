@@ -153,8 +153,8 @@ var RTable = (function () {
         var _this = this;
 
         var url = updateQueryStringMultiple(dataRequest.flatten(), this.baseUrl);
-        return ajaxGet(url).then(function (xhr) {
-          return _this.onResponse(new AjaxDataSourceResponse(xhr), dataRequest);
+        return deps.ajaxGet(url).then(function (xhr) {
+          return _this.onResponse(new deps.AjaxDataSourceResponse(xhr), dataRequest);
         });
       }
     }]);
@@ -239,7 +239,7 @@ var RTable = (function () {
   }();
 
   function getJson(url) {
-    return ajaxGet(url, 'json');
+    return deps.ajaxGet(url, 'json');
   }
 
   function ajaxGet(url) {
@@ -270,6 +270,11 @@ var RTable = (function () {
       request.send();
     });
   }
+
+  var deps = {
+    ajaxGet: ajaxGet,
+    AjaxDataSourceResponse: AjaxDataSourceResponse
+  };
 
   var RTable = function (_React$Component) {
     babelHelpers.inherits(RTable, _React$Component);

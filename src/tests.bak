@@ -270,62 +270,6 @@ describe("RTable", function() {
   });
 });
 
-describe("AjaxDataSource", function() {
-  it("should GET baseUrl and call onResponse", function() {
-    let params = {
-      baseUrl: "http://example.com/foo",
-      onResponse: jasmine.createSpy('onResponse')
-    };
-    let dataRequest = {
-      'page': 1,
-      'ordering' : '-quux',
-      'filters': {'foo': 'bar'},
-      'flatten': () => ({'page': 1, 'ordering': '-quux', 'foo': 'bar'})
-    };
-    let ajaxGetPromise = new MockPromise();
-    let ajaxGet = spyOn(window, 'ajaxGet').and.returnValue(ajaxGetPromise);
-    new AjaxDataSource(params).get(dataRequest);
-    expect(ajaxGet).toHaveBeenCalledWith(
-      "http://example.com/foo?page=1&ordering=-quux&foo=bar");
-
-    let response = {};
-    let AjaxDataSourceResponse = spyOn(window, 'AjaxDataSourceResponse')
-      .and.returnValue(response);
-    ajaxGetPromise.resolveNow('xhr');
-    expect(AjaxDataSourceResponse).toHaveBeenCalledWith('xhr');
-    expect(params.onResponse).toHaveBeenCalledWith(response, dataRequest);
-  });
-});
-
-describe("AjaxDataSourceResponse", function() {
-  it("should load json", function() {
-    let jsonPayload = {foo: "bar"};
-    let fakeXhr = {
-      getResponseHeader: () => "application/json; content-type=utf-8",
-      responseText: JSON.stringify(jsonPayload)
-    };
-    let source = new AjaxDataSourceResponse(fakeXhr);
-    expect(source.xhr).toBe(fakeXhr);
-    expect(source.json).toEqual(jsonPayload);
-  });
-  it("should parse Link headers", function() {
-    let header = 'Link: <https://api.github.com/user/repos?page=3&per_page=100>; rel="next",' +
-      ' <https://api.github.com/user/repos?page=50&per_page=100>; rel="last"';
-    let fakeXhr = {getResponseHeader() {}};
-
-    let source = new AjaxDataSourceResponse(fakeXhr);
-    spyOn(fakeXhr, 'getResponseHeader').and.returnValue(header);
-    source.getUrlParamFromLinkHeader("page", "next");
-    expect(fakeXhr.getResponseHeader.calls.count()).toEqual(1);
-    expect(fakeXhr.getResponseHeader.calls.argsFor(0)).toEqual(['Link']);
-
-    expect(source.getUrlParamFromLinkHeader("page", "next")).toEqual("3");
-    expect(source.getUrlParamFromLinkHeader("page", "last")).toEqual("50");
-    expect(source.getUrlParamFromLinkHeader("page", "foo")).toEqual(null);
-    expect(source.getUrlParamFromLinkHeader("per_page", "next")).toEqual("100");
-  });
-});
-
 let UI = {
   // TODO https://www.npmjs.com/package/jasmine-react ?
   create(props, qs="") {
@@ -359,28 +303,4 @@ function rows(n) {
     x.push({"foo": i});
   }
   return x;
-}
-
-class MockPromise {
-  constructor() {
-    this.callbacks = {onFulfilled: [], onRejected: []};
-  }
-
-  then(onFulfilled, onRejected) {
-    if (typeof onFulfilled === 'function') {
-      this.callbacks.onFulfilled.push(onFulfilled);
-    }
-    if (typeof onRejected === 'function') {
-      this.callbacks.onRejected.push(onRejected);
-    }
-
-  }
-  // This would normally happen when the stack is exhausted.
-  // MockPromise requires the caller to trigger that manually
-  resolveNow(value) {
-    this.callbacks.onFulfilled.forEach(cb => cb(value));
-  }
-  rejectNow(reason) {
-    this.callbacks.onRejected.forEach(cb => cb(reason));
-  }
 }

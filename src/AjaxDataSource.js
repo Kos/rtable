@@ -9,8 +9,8 @@ export class AjaxDataSource {
   }
   get(dataRequest) {
     let url = updateQueryStringMultiple(dataRequest.flatten(), this.baseUrl);
-    return ajaxGet(url).then(xhr =>
-      this.onResponse(new AjaxDataSourceResponse(xhr), dataRequest)
+    return deps.ajaxGet(url).then(xhr =>
+      this.onResponse(new deps.AjaxDataSourceResponse(xhr), dataRequest)
     );
   }
 }
@@ -77,7 +77,7 @@ export class DefaultDataSource {
 
 
 function getJson(url) {
-  return ajaxGet(url, 'json');
+  return deps.ajaxGet(url, 'json');
 }
 
 
@@ -107,3 +107,8 @@ function ajaxGet(url, res='xhr') {
     request.send();
   });
 }
+
+export let deps = {
+  ajaxGet: ajaxGet,
+  AjaxDataSourceResponse: AjaxDataSourceResponse
+};
