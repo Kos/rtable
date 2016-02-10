@@ -1,4 +1,4 @@
-import React from 'React';
+import React from 'react';
 
 var babelHelpers = {};
 babelHelpers.typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {

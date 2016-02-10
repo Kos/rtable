@@ -1,4 +1,4 @@
-import React from 'React';
+import React from 'react';
 import { parseUri, updateQueryStringMultiple } from './UrlUtils';
 import { isNullOrUndefined } from './utils';
 import { DefaultDataSource, AjaxDataSource } from './AjaxDataSource';
