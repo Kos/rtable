@@ -4,7 +4,7 @@ import ReactTestUtils from 'react-addons-test-utils';
 import expect from 'expect';
 import MockPromise from './MockPromise';
 
-import RTable from '../src/rtable'; //eslint-disable-line no-unused-vars
+import RTable, { deps } from '../src/rtable'; //eslint-disable-line no-unused-vars
 
 afterEach(function() {
   expect.restoreSpies();
@@ -20,10 +20,17 @@ describe("RTable", function() {
           'results': results}});
       };
       this.renderWithResponse = function({props, response}) {
-        props.dataSource = new FakeDataSource(response);
+        props.dataSource = new FakeDataSource();
         let rtable = ReactTestUtils.renderIntoDocument(<RTable {...props} /> );
+        props.dataSource.resolve(response);
         return rtable;
       };
+      deps.window = {
+        location: {
+          href: "http://example.com/rtable.html"
+        }
+      };
+
     });
 
     it("should render", function() {
@@ -106,14 +113,28 @@ describe("RTable", function() {
       expectClasses(rtable.refs.paginationPrevious).toEqual(['btn', 'btn-primary', 't-prev']);
     });
 
+    it.only("should render initial ordering", function() {
+      deps.window.location.href = "http://example.com/?ordering=-foo";
+      let rtable = this.renderWithData({
+        props: {
+          dataUrl: "/api",
+          columns: [{'name': 'foo'}]
+        },
+        results: []
+      });
+      expect(rtable.refs.columnHeaderRow.children[0].textContent).toEqual('foo' + '\u25BC');
+    });
   });
 });
 
 class FakeDataSource {
-  constructor(data) {
-    this.data = data;
+  constructor() {
+    this.promise = new MockPromise();
   }
   get() {
-    return MockPromise.resolve(this.data);
+    return this.promise;
+  }
+  resolve(data) {
+    this.promise.resolveNow(data);
   }
 }

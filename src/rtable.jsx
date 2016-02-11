@@ -3,6 +3,10 @@ import { parseUri, updateQueryStringMultiple } from './UrlUtils';
 import { isNullOrUndefined } from './utils';
 import { DefaultDataSource, AjaxDataSource } from './AjaxDataSource';
 
+export let deps = {
+  window: window
+};
+
 export default class RTable extends React.Component {
   constructor(props) {
     super(props);
@@ -132,7 +136,7 @@ class DataLoader {
     this.loadFromSource(initialDataRequest);
   }
   getWindowLocation() {
-    return window.location.href;
+    return deps.window.location.href;
   }
   currentState() {
     return this.component.state;
@@ -144,8 +148,8 @@ class DataLoader {
       ordering: (newParams.ordering !== undefined ? newParams.ordering : state.ordering),
       filters: Object.assign({}, state.filters, newParams.filters || {})
     });
-    if (window.history.replaceState) {
-      window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
+    if (deps.window.history.replaceState) {
+      deps.window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
     }
     return this.loadFromSource(newDataRequest);
   }

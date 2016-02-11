@@ -1,4 +1,4 @@
-var RTable = (function (React) {
+(function (exports,React) {
   'use strict';
 
   React = 'default' in React ? React['default'] : React;
@@ -155,8 +155,8 @@ var RTable = (function (React) {
         var _this = this;
 
         var url = updateQueryStringMultiple(dataRequest.flatten(), this.baseUrl);
-        return deps.ajaxGet(url).then(function (xhr) {
-          return _this.onResponse(new deps.AjaxDataSourceResponse(xhr), dataRequest);
+        return deps$1.ajaxGet(url).then(function (xhr) {
+          return _this.onResponse(new deps$1.AjaxDataSourceResponse(xhr), dataRequest);
         });
       }
     }]);
@@ -241,7 +241,7 @@ var RTable = (function (React) {
   }();
 
   function getJson(url) {
-    return deps.ajaxGet(url, 'json');
+    return deps$1.ajaxGet(url, 'json');
   }
 
   function ajaxGet(url) {
@@ -273,9 +273,13 @@ var RTable = (function (React) {
     });
   }
 
-  var deps = {
+  var deps$1 = {
     ajaxGet: ajaxGet,
     AjaxDataSourceResponse: AjaxDataSourceResponse
+  };
+
+  var deps = {
+    window: window
   };
 
   var RTable = function (_React$Component) {
@@ -517,7 +521,7 @@ var RTable = (function (React) {
     }, {
       key: 'getWindowLocation',
       value: function getWindowLocation() {
-        return window.location.href;
+        return deps.window.location.href;
       }
     }, {
       key: 'currentState',
@@ -533,8 +537,8 @@ var RTable = (function (React) {
           ordering: newParams.ordering !== undefined ? newParams.ordering : state.ordering,
           filters: Object.assign({}, state.filters, newParams.filters || {})
         });
-        if (window.history.replaceState) {
-          window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
+        if (deps.window.history.replaceState) {
+          deps.window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
         }
         return this.loadFromSource(newDataRequest);
       }
@@ -699,6 +703,7 @@ var RTable = (function (React) {
     };
   }
 
-  return RTable;
+  exports.deps = deps;
+  exports['default'] = RTable;
 
-}(React));
+}((this.RTable = {}),React));

@@ -152,8 +152,8 @@ var AjaxDataSource = function () {
       var _this = this;
 
       var url = updateQueryStringMultiple(dataRequest.flatten(), this.baseUrl);
-      return deps.ajaxGet(url).then(function (xhr) {
-        return _this.onResponse(new deps.AjaxDataSourceResponse(xhr), dataRequest);
+      return deps$1.ajaxGet(url).then(function (xhr) {
+        return _this.onResponse(new deps$1.AjaxDataSourceResponse(xhr), dataRequest);
       });
     }
   }]);
@@ -238,7 +238,7 @@ var DefaultDataSource = function () {
 }();
 
 function getJson(url) {
-  return deps.ajaxGet(url, 'json');
+  return deps$1.ajaxGet(url, 'json');
 }
 
 function ajaxGet(url) {
@@ -270,9 +270,13 @@ function ajaxGet(url) {
   });
 }
 
-var deps = {
+var deps$1 = {
   ajaxGet: ajaxGet,
   AjaxDataSourceResponse: AjaxDataSourceResponse
+};
+
+var deps = {
+  window: window
 };
 
 var RTable = function (_React$Component) {
@@ -514,7 +518,7 @@ var DataLoader = function () {
   }, {
     key: 'getWindowLocation',
     value: function getWindowLocation() {
-      return window.location.href;
+      return deps.window.location.href;
     }
   }, {
     key: 'currentState',
@@ -530,8 +534,8 @@ var DataLoader = function () {
         ordering: newParams.ordering !== undefined ? newParams.ordering : state.ordering,
         filters: Object.assign({}, state.filters, newParams.filters || {})
       });
-      if (window.history.replaceState) {
-        window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
+      if (deps.window.history.replaceState) {
+        deps.window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
       }
       return this.loadFromSource(newDataRequest);
     }
@@ -696,4 +700,4 @@ function delayed(delay, fn) {
   };
 }
 
-export default RTable;
+export { deps };export default RTable;
