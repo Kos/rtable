@@ -8,8 +8,8 @@ export default {
   plugins: [babel({
     "presets": ["es2015-rollup", "react"]
   })],
-  external: ['React'],
+  external: ['react'],
   globals: {
-    React: 'React'
+    react: 'React'
   }
 };
