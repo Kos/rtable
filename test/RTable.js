@@ -30,7 +30,9 @@ describe("RTable", function() {
           href: "http://example.com/rtable.html"
         }
       };
-
+      this.setLocation = loc => {
+        deps.window.location.href = loc;
+      };
     });
 
     it("should render", function() {
@@ -113,8 +115,8 @@ describe("RTable", function() {
       expectClasses(rtable.refs.paginationPrevious).toEqual(['btn', 'btn-primary', 't-prev']);
     });
 
-    it.only("should render initial ordering", function() {
-      deps.window.location.href = "http://example.com/?ordering=-foo";
+    it("should render initial ordering", function() {
+      this.setLocation("http://example.com/?ordering=-foo");
       let rtable = this.renderWithData({
         props: {
           dataUrl: "/api",
@@ -123,6 +125,50 @@ describe("RTable", function() {
         results: []
       });
       expect(rtable.refs.columnHeaderRow.children[0].textContent).toEqual('foo' + '\u25BC');
+    });
+
+    it("should render initial filter values", function() {
+      this.setLocation("/?filter1=f1value&filter2=f2value");
+      let rtable = this.renderWithData({
+        props: {
+          dataUrl: "/api",
+          columns: [],
+          filters: [
+            {'name': 'filter1'},
+            {'name': 'filter2', 'choices': [
+              {'value': 'whatever'},
+              {'value': 'f2value'}]}
+          ]
+        },
+        results: []
+      });
+      let input = rtable.refs.filterRow.querySelector("input");
+      let select = rtable.refs.filterRow.querySelector("select");
+      expect(input.value).toEqual("f1value");
+      expect(select.value).toEqual("f2value");
+    });
+
+    it("should render pagination buttons", function() {
+      this.setLocation("http://example.com/?unrelated=bar");
+      let rtable = this.renderWithResponse({
+        props: {
+          dataUrl: "http://example.com/data",
+          columns: [],
+          filters: []
+        },
+        response: {
+          count: 10,
+          next: "nextPageId",
+          previous: "prevPageId",
+          results: [1, 2, 3]
+        }
+      });
+      let buttonNext = rtable.refs.paginationNext;
+      let buttonPrevious = rtable.refs.paginationPrevious;
+      expect(buttonNext.href).toContain("?unrelated=bar&page=nextPageId");
+      expect(buttonPrevious.href).toContain("?unrelated=bar&page=prevPageId");
+      // TODO expect them to be relative links - buttonNext.href is absolute,
+      // even though relative is rendered (?)
     });
   });
 });
