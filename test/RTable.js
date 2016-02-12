@@ -11,6 +11,31 @@ afterEach(function() {
 });
 
 describe("RTable", function() {
+  describe("behaviour", function() {
+    it("should download initial data");
+    // Once the table renders, it should fire a request.
+    // Once the request comes back, it should update state
+
+    it("should take data from window url");
+    // Once the table renders, the initial request should contain the URL's state
+
+    it("should paginate");
+    // Clicking new page should trigger a new request
+
+    it("should sort");
+    // Clicking a column should trigger a new request (x2)
+
+    it("should filter selects immediately");
+    // Clicking a filter should trigger a new request
+
+    it("should filter selects with value=null");
+    // Clicking a filter should trigger a new request
+
+    it("should filter inputs with a delay");
+    // Clicking a filter should trigger a new request LATER
+  });
+
+
   describe("rendering", function() {
 
     beforeEach(function() {
