@@ -158,12 +158,13 @@ class DataLoader {
   }
   decodeWindowUrl() {
     let data = parseUri(this.getWindowLocation()).queryKey;
-    let initialFilterState = data;
-    // TODO only read stuff that you understand, don't just take the whole window's QS
+    let filters = this.component.props.filters || [];
+    let filterExists = name => filters.some(f => f.name === name);
+    let filterState = pick(data, Object.keys(data).filter(filterExists));
     return new DataRequest({
       "page": data.page || 1,
       "ordering": data.ordering || null,
-      "filters": initialFilterState
+      "filters": filterState
     });
   }
   loadFromSource(dataRequest) {
@@ -275,4 +276,11 @@ function delayed(delay, fn) {
     }
     timeout = setTimeout(() => fn.apply(null, arguments), delay);
   };
+}
+
+function pick(o, fields) {
+  return fields.reduce((a, x) => {
+    if(o.hasOwnProperty(x)) a[x] = o[x];
+    return a;
+  }, {});
 }

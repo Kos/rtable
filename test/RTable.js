@@ -11,6 +11,34 @@ afterEach(function() {
 });
 
 describe("RTable", function() {
+
+  beforeEach(function() {
+    this.renderWithData = function({props, results}) {
+      return this.renderWithResponse({props: props, response: {
+        'count': results.length, 'next': null, 'previous': null,
+        'results': results}});
+    };
+    this.renderWithResponse = function({props, response}) {
+      props.dataSource = new FakeDataSource();
+      let rtable = ReactTestUtils.renderIntoDocument(<RTable {...props} /> );
+      props.dataSource.resolve(response);
+      return rtable;
+    };
+    this._window = deps.window;
+    deps.window = {
+      location: {
+        href: "http://example.com/rtable/"
+      }
+    };
+    this.setLocation = loc => {
+      deps.window.location.href = loc;
+    };
+  });
+
+  afterEach(function() {
+    deps.window = this._window;
+  });
+
   describe("behaviour", function() {
     it("should download initial data", function() {
       let ds = new FakeDataSource();
@@ -37,7 +65,29 @@ describe("RTable", function() {
       expect(component.state.hasNext).toEqual(false);
     });
 
-    it("should take data from window url");
+    it("should take initial request data from window url", function() {
+      this.setLocation('http://example.com/?filter1=10&ordering=quux&page=5');
+      let ds = new FakeDataSource();
+      spyOn(ds, "get").andCallThrough();
+      let filters = [
+        {name: 'filter1'},
+        {name: 'filter2'}
+      ];
+      ReactTestUtils.renderIntoDocument(
+        <RTable dataSource={ds} filters={filters}/>);
+      // expect(ds.get).toHaveBeenCalledWith({
+      //   page: 5,
+      //   ordering: "quux",
+      //   filters: {
+      //     filter1: "10",
+      //   }
+      // });
+      // ... yeah, I wish... again
+      expect(ds.get).toHaveBeenCalled();
+      expect(ds.get.calls[0].arguments[0].page).toEqual('5');
+      expect(ds.get.calls[0].arguments[0].ordering).toEqual("quux");
+      expect(ds.get.calls[0].arguments[0].filters).toEqual({filter1: "10"});
+    });
     // Once the table renders, the initial request should contain the URL's state
 
     it("should paginate");
@@ -58,28 +108,6 @@ describe("RTable", function() {
 
 
   describe("rendering", function() {
-
-    beforeEach(function() {
-      this.renderWithData = function({props, results}) {
-        return this.renderWithResponse({props: props, response: {
-          'count': results.length, 'next': null, 'previous': null,
-          'results': results}});
-      };
-      this.renderWithResponse = function({props, response}) {
-        props.dataSource = new FakeDataSource();
-        let rtable = ReactTestUtils.renderIntoDocument(<RTable {...props} /> );
-        props.dataSource.resolve(response);
-        return rtable;
-      };
-      deps.window = {
-        location: {
-          href: "http://example.com/rtable.html"
-        }
-      };
-      this.setLocation = loc => {
-        deps.window.location.href = loc;
-      };
-    });
 
     it("should render", function() {
       let component = this.renderWithData({
