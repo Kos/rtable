@@ -1,7 +1,7 @@
 import React from 'react'; // eslint-disable-line no-unused-vars
 import ReactDOM from 'react-dom';
 import ReactTestUtils from 'react-addons-test-utils';
-import expect from 'expect';
+import expect, { spyOn } from 'expect';
 import MockPromise from './MockPromise';
 
 import RTable, { deps } from '../src/rtable'; //eslint-disable-line no-unused-vars
@@ -12,9 +12,30 @@ afterEach(function() {
 
 describe("RTable", function() {
   describe("behaviour", function() {
-    it("should download initial data");
-    // Once the table renders, it should fire a request.
-    // Once the request comes back, it should update state
+    it("should download initial data", function() {
+      let ds = new FakeDataSource();
+      spyOn(ds, "get").andCallThrough();
+      let component = ReactTestUtils.renderIntoDocument(
+        <RTable dataSource={ds} />);
+      // expect(ds.get).toHaveBeenCalledWith({
+      //   page: 1,
+      //   ordering: null,
+      //   filters: {}
+      // });
+      // ... yeah, I wish
+      expect(ds.get).toHaveBeenCalled();
+      expect(ds.get.calls[0].arguments[0].page).toEqual(1);
+      expect(ds.get.calls[0].arguments[0].ordering).toEqual(null);
+      expect(ds.get.calls[0].arguments[0].filters).toEqual({});
+      ds.resolve({
+        count: 5,
+        next: null,
+        previous: null,
+        results: [5, 4, 3, 2, 1]
+      });
+      expect(component.state.count).toEqual(5);
+      expect(component.state.hasNext).toEqual(false);
+    });
 
     it("should take data from window url");
     // Once the table renders, the initial request should contain the URL's state

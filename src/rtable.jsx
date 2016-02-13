@@ -40,7 +40,7 @@ export default class RTable extends React.Component {
       </th>
     );
     let rows = this.state.results.map((row, m) => {
-      let cells = this.props.columns.map((col, n) =>
+      let cells = columns.map((col, n) =>
         <td key={n}>{this.getValue(row, col)}</td>
       );
       return <tr key={m}>{cells}</tr>;

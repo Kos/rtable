@@ -330,7 +330,7 @@ var RTable = function (_React$Component) {
         );
       });
       var rows = this.state.results.map(function (row, m) {
-        var cells = _this2.props.columns.map(function (col, n) {
+        var cells = columns.map(function (col, n) {
           return React.createElement(
             'td',
             { key: n },
