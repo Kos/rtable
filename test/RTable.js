@@ -1,7 +1,7 @@
 import React from 'react'; // eslint-disable-line no-unused-vars
 import ReactDOM from 'react-dom';
 import ReactTestUtils from 'react-addons-test-utils';
-import expect, { spyOn } from 'expect';
+import expect from 'expect';
 import MockPromise from './MockPromise';
 
 import RTable, { deps } from '../src/rtable'; //eslint-disable-line no-unused-vars
@@ -13,13 +13,14 @@ afterEach(function() {
 describe("RTable", function() {
 
   beforeEach(function() {
+    this.dataSource = new FakeDataSource();
     this.renderWithData = function({props, results}) {
       return this.renderWithResponse({props: props, response: {
         'count': results.length, 'next': null, 'previous': null,
         'results': results}});
     };
     this.renderWithResponse = function({props, response}) {
-      props.dataSource = new FakeDataSource();
+      props.dataSource = this.dataSource;
       let rtable = ReactTestUtils.renderIntoDocument(<RTable {...props} /> );
       props.dataSource.resolve(response);
       return rtable;
@@ -41,21 +42,19 @@ describe("RTable", function() {
 
   describe("behaviour", function() {
     it("should download initial data", function() {
-      let ds = new FakeDataSource();
-      spyOn(ds, "get").andCallThrough();
       let component = ReactTestUtils.renderIntoDocument(
-        <RTable dataSource={ds} />);
-      // expect(ds.get).toHaveBeenCalledWith({
+        <RTable dataSource={this.dataSource} />);
+      let lastDataRequest = this.dataSource.lastDataRequest;
+      // expect(lastDataRequest).toEqual({
       //   page: 1,
       //   ordering: null,
       //   filters: {}
       // });
       // ... yeah, I wish
-      expect(ds.get).toHaveBeenCalled();
-      expect(ds.get.calls[0].arguments[0].page).toEqual(1);
-      expect(ds.get.calls[0].arguments[0].ordering).toEqual(null);
-      expect(ds.get.calls[0].arguments[0].filters).toEqual({});
-      ds.resolve({
+      expect(lastDataRequest.page).toEqual(1);
+      expect(lastDataRequest.ordering).toEqual(null);
+      expect(lastDataRequest.filters).toEqual({});
+      this.dataSource.resolve({
         count: 5,
         next: null,
         previous: null,
@@ -69,15 +68,14 @@ describe("RTable", function() {
 
     it("should take initial request data from window url", function() {
       this.setLocation('http://example.com/?filter1=10&ordering=quux&page=5');
-      let ds = new FakeDataSource();
-      spyOn(ds, "get").andCallThrough();
       let filters = [
         {name: 'filter1'},
         {name: 'filter2'}
       ];
       ReactTestUtils.renderIntoDocument(
-        <RTable dataSource={ds} filters={filters}/>);
-      // expect(ds.get).toHaveBeenCalledWith({
+        <RTable dataSource={this.dataSource} filters={filters}/>);
+      let lastDataRequest = this.dataSource.lastDataRequest;
+      // expect(lastDataRequest).toEqual({
       //   page: 5,
       //   ordering: "quux",
       //   filters: {
@@ -85,10 +83,9 @@ describe("RTable", function() {
       //   }
       // });
       // ... yeah, I wish... again
-      expect(ds.get).toHaveBeenCalled();
-      expect(ds.get.calls[0].arguments[0].page).toEqual('5');
-      expect(ds.get.calls[0].arguments[0].ordering).toEqual("quux");
-      expect(ds.get.calls[0].arguments[0].filters).toEqual({filter1: "10"});
+      expect(lastDataRequest.page).toEqual('5');
+      expect(lastDataRequest.ordering).toEqual("quux");
+      expect(lastDataRequest.filters).toEqual({filter1: "10"});
     });
     // Once the table renders, the initial request should contain the URL's state
 
@@ -252,8 +249,11 @@ describe("RTable", function() {
 class FakeDataSource {
   constructor() {
     this.promise = new MockPromise();
+    this.dataRequests = [];
   }
-  get() {
+  get(dataRequest) {
+    this.dataRequests.push(dataRequest);
+    this.lastDataRequest = dataRequest;
     return this.promise;
   }
   resolve(data) {
