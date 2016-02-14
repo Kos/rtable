@@ -592,12 +592,12 @@ var DataLoader = function () {
   }, {
     key: 'nextPage',
     value: function nextPage(event) {
-      return this.goToPage(event, this.currentState().page + 1);
+      return this.goToPage(event, this.currentState().next);
     }
   }, {
     key: 'prevPage',
     value: function prevPage(event) {
-      return this.goToPage(event, this.currentState().page - 1);
+      return this.goToPage(event, this.currentState().previous);
     }
   }, {
     key: 'orderBy',

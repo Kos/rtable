@@ -89,8 +89,25 @@ describe("RTable", function() {
     });
     // Once the table renders, the initial request should contain the URL's state
 
-    it("should paginate");
-    // Clicking new page should trigger a new request
+    it("should fetch next page", function() {
+      let component = this.renderWithResponse({
+        props: {},
+        response: {
+          count: 10,
+          next: "xxx",
+          previous: "yyy",
+          results: []
+        }
+      });
+      // TODO drop the default page 1. It should be null or something.
+      expect(this.dataSource.dataRequests[0].page).toEqual(1);
+      let elem = component.refs.paginationNext;
+      ReactTestUtils.Simulate.click(elem);
+      expect(this.dataSource.dataRequests.length).toEqual(2);
+      expect(this.dataSource.lastDataRequest.page).toEqual("xxx");
+      expect(this.dataSource.lastDataRequest.ordering).toEqual(null);
+      expect(this.dataSource.lastDataRequest.filters).toEqual({});
+    });
 
     it("should sort");
     // Clicking a column should trigger a new request (x2)

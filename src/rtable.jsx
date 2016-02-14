@@ -193,10 +193,10 @@ class DataLoader {
     return this.loadWithUpdatedParams({page});
   }
   nextPage(event) {
-    return this.goToPage(event, this.currentState().page+1);
+    return this.goToPage(event, this.currentState().next);
   }
   prevPage(event) {
-    return this.goToPage(event, this.currentState().page-1);
+    return this.goToPage(event, this.currentState().previous);
   }
   orderBy(event, ordering) {
     if (event.ctrlKey || event.altKey || event.shiftKey) return;
