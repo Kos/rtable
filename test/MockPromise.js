@@ -1,4 +1,5 @@
 export default class MockPromise {
+  // TODO this hack needs to be replaced with a hack that passes the Promises/A+ suite
   constructor() {
     this.callbacks = {onFulfilled: [], onRejected: []};
     this.state = 'pending';
@@ -19,6 +20,10 @@ export default class MockPromise {
         onRejected(this.reason);
       }
     }
+    let pro = new MockPromise();
+    this.callbacks.onFulfilled.push(pro.resolveNow.bind(pro));
+    this.callbacks.onRejected.push(pro.rejectNow.bind(pro));
+    return pro;
   }
   // This would normally happen when the stack is exhausted.
   // MockPromise requires the caller to trigger that manually
@@ -31,6 +36,10 @@ export default class MockPromise {
     this.state = 'rejected';
     this.reason = reason;
     this.callbacks.onRejected.forEach(cb => cb(reason));
+  }
+
+  catch(onRejected) {
+    return this.then(null, onRejected);
   }
 }
 

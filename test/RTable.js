@@ -65,6 +65,8 @@ describe("RTable", function() {
       expect(component.state.hasNext).toEqual(false);
     });
 
+    it("should report errors with invalid response");
+
     it("should take initial request data from window url", function() {
       this.setLocation('http://example.com/?filter1=10&ordering=quux&page=5');
       let ds = new FakeDataSource();

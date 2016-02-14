@@ -148,7 +148,7 @@ class DataLoader {
       ordering: (newParams.ordering !== undefined ? newParams.ordering : state.ordering),
       filters: Object.assign({}, state.filters, newParams.filters || {})
     });
-    if (deps.window.history.replaceState) {
+    if (deps.window.history && deps.window.history.replaceState) {
       deps.window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
     }
     return this.loadFromSource(newDataRequest);
@@ -168,12 +168,24 @@ class DataLoader {
     });
   }
   loadFromSource(dataRequest) {
+    let validateResponse = resp => {
+      validate(check => {
+        check.object(resp, "resp");
+        check.number(resp.count, "resp.count");
+        check.defined(resp.next, "resp.next");
+        check.defined(resp.previous, "resp.previous");
+        check.array(resp.results, "resp.results");
+      });
+      return resp;
+    };
     return this.dataSource.get(dataRequest)
+    .then(validateResponse)
     .then(response => {
       let state = this.buildStateFromResponse(response, dataRequest);
       this.component.setState(state);
       return state;
-    });
+    })
+    .catch(this.reportError.bind(this));
   }
   goToPage(event, page) {
     if (event.ctrlKey || event.altKey || event.shiftKey) return;
@@ -252,6 +264,12 @@ class DataLoader {
     }
     return state;
   }
+
+  reportError(err) {
+    if (window.console) {
+      window.console.error(err);
+    }
+  }
 }
 
 class DataRequest {
@@ -283,4 +301,34 @@ function pick(o, fields) {
     if(o.hasOwnProperty(x)) a[x] = o[x];
     return a;
   }, {});
+}
+
+
+function validate(f) {
+  let errors = [];
+  let checkCondition = (cond, label, message) => {
+    if (!cond) {
+      errors.push(label + " " + message);
+    }
+  };
+  let checkObj = {
+    defined: (val, label) => checkCondition(typeof val !== 'undefined', label, "should be defined"),
+    number: (val, label) => checkCondition(typeof val === 'number', label, "should be a number"),
+    array: (val, label) => checkCondition(val.constructor === Array, label, "should be an array"),
+    string: (val, label) => checkCondition(typeof val === 'string', label, "should be a string"),
+    object: (val, label) => checkCondition(val && typeof val === 'object', label, "should be an object")
+  };
+  try {
+    f(checkObj);
+  } catch(e) {
+    if (errors.length === 0) {
+      errors.push(e);
+    } else {
+      // Ignore, previous errors should be meaningful enough.
+    }
+  }
+  if (errors.length > 0) {
+    throw new Error(errors);
+  }
+  return true;
 }

@@ -537,7 +537,7 @@
           ordering: newParams.ordering !== undefined ? newParams.ordering : state.ordering,
           filters: Object.assign({}, state.filters, newParams.filters || {})
         });
-        if (deps.window.history.replaceState) {
+        if (deps.window.history && deps.window.history.replaceState) {
           deps.window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
         }
         return this.loadFromSource(newDataRequest);
@@ -551,12 +551,17 @@
       key: 'decodeWindowUrl',
       value: function decodeWindowUrl() {
         var data = parseUri(this.getWindowLocation()).queryKey;
-        var initialFilterState = data;
-        // TODO only read stuff that you understand, don't just take the whole window's QS
+        var filters = this.component.props.filters || [];
+        var filterExists = function filterExists(name) {
+          return filters.some(function (f) {
+            return f.name === name;
+          });
+        };
+        var filterState = pick(data, Object.keys(data).filter(filterExists));
         return new DataRequest({
           "page": data.page || 1,
           "ordering": data.ordering || null,
-          "filters": initialFilterState
+          "filters": filterState
         });
       }
     }, {
@@ -564,11 +569,21 @@
       value: function loadFromSource(dataRequest) {
         var _this4 = this;
 
-        return this.dataSource.get(dataRequest).then(function (response) {
+        var validateResponse = function validateResponse(resp) {
+          validate(function (check) {
+            check.object(resp, "resp");
+            check.number(resp.count, "resp.count");
+            check.defined(resp.next, "resp.next");
+            check.defined(resp.previous, "resp.previous");
+            check.array(resp.results, "resp.results");
+          });
+          return resp;
+        };
+        return this.dataSource.get(dataRequest).then(validateResponse).then(function (response) {
           var state = _this4.buildStateFromResponse(response, dataRequest);
           _this4.component.setState(state);
           return state;
-        });
+        }).catch(this.reportError.bind(this));
       }
     }, {
       key: 'goToPage',
@@ -665,6 +680,13 @@
         }
         return state;
       }
+    }, {
+      key: 'reportError',
+      value: function reportError(err) {
+        if (window.console) {
+          window.console.error(err);
+        }
+      }
     }]);
     return DataLoader;
   }();
@@ -701,6 +723,52 @@
         return fn.apply(null, _arguments);
       }, delay);
     };
+  }
+
+  function pick(o, fields) {
+    return fields.reduce(function (a, x) {
+      if (o.hasOwnProperty(x)) a[x] = o[x];
+      return a;
+    }, {});
+  }
+
+  function validate(f) {
+    var errors = [];
+    var checkCondition = function checkCondition(cond, label, message) {
+      if (!cond) {
+        errors.push(label + " " + message);
+      }
+    };
+    var checkObj = {
+      defined: function defined(val, label) {
+        return checkCondition(typeof val !== 'undefined', label, "should be defined");
+      },
+      number: function number(val, label) {
+        return checkCondition(typeof val === 'number', label, "should be a number");
+      },
+      array: function array(val, label) {
+        return checkCondition(val.constructor === Array, label, "should be an array");
+      },
+      string: function string(val, label) {
+        return checkCondition(typeof val === 'string', label, "should be a string");
+      },
+      object: function object(val, label) {
+        return checkCondition(val && (typeof val === 'undefined' ? 'undefined' : babelHelpers.typeof(val)) === 'object', label, "should be an object");
+      }
+    };
+    try {
+      f(checkObj);
+    } catch (e) {
+      if (errors.length === 0) {
+        errors.push(e);
+      } else {
+        // Ignore, previous errors should be meaningful enough.
+      }
+    }
+    if (errors.length > 0) {
+      throw new Error(errors);
+    }
+    return true;
   }
 
   exports.deps = deps;
