@@ -61,7 +61,7 @@ describe("RTable", function() {
         results: [5, 4, 3, 2, 1]
       });
       expect(component.state.count).toEqual(5);
-      expect(component.state.hasNext).toEqual(false);
+      expect(component.state.hasNextPage).toEqual(false);
     });
 
     it("should report errors with invalid response");

@@ -358,7 +358,7 @@
               React.createElement(
                 'td',
                 { ref: 'paginationContainer', className: 'text-center', colSpan: columns.length },
-                this.state.hasPrev ? React.createElement(
+                this.state.hasPreviousPage ? React.createElement(
                   'a',
                   { ref: 'paginationPrevious', className: 'btn btn-primary t-prev', href: this.state.prevQuery, onClick: this.loader.fn.prevPage },
                   'prev'
@@ -370,7 +370,7 @@
                 ' ',
                 React.createElement(PaginationInfo, this.state),
                 ' ',
-                this.state.hasNext ? React.createElement(
+                this.state.hasNextPage ? React.createElement(
                   'a',
                   { ref: 'paginationNext', className: 'btn btn-primary t-next', href: this.state.nextQuery, onClick: this.loader.fn.nextPage },
                   'next'
@@ -595,12 +595,12 @@
     }, {
       key: 'nextPage',
       value: function nextPage(event) {
-        return this.goToPage(event, this.currentState().next);
+        return this.goToPage(event, this.currentState().nextPage);
       }
     }, {
       key: 'prevPage',
       value: function prevPage(event) {
-        return this.goToPage(event, this.currentState().previous);
+        return this.goToPage(event, this.currentState().previousPage);
       }
     }, {
       key: 'orderBy',
@@ -650,13 +650,13 @@
         var haveCount = !isNullOrUndefined(dataResponse.count);
         var state = {
           count: haveCount ? dataResponse.count : '?',
-          next: dataResponse.next,
-          previous: dataResponse.previous,
+          nextPage: dataResponse.next,
+          previousPage: dataResponse.previous,
           results: dataResponse.results,
           page: page,
           page0: page - 1,
-          hasNext: !!dataResponse.next,
-          hasPrev: !!dataResponse.previous,
+          hasNextPage: !!dataResponse.next,
+          hasPreviousPage: !!dataResponse.previous,
           nextQuery: buildPageUrl(dataResponse.next),
           prevQuery: buildPageUrl(dataResponse.previous),
           ordering: dataRequest.ordering || null

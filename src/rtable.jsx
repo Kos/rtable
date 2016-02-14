@@ -49,13 +49,13 @@ export default class RTable extends React.Component {
       <table className="table table-striped table-hover">
         <thead>
           <tr><td ref="paginationContainer" className="text-center" colSpan={columns.length}>
-            {this.state.hasPrev
+            {this.state.hasPreviousPage
               ? <a ref="paginationPrevious" className="btn btn-primary t-prev" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a>
               : <button ref="paginationPrevious" className="btn btn-primary t-prev" disabled>prev</button> }
             {' '}
             <PaginationInfo {...this.state} />
             {' '}
-            {this.state.hasNext
+            {this.state.hasNextPage
               ? <a ref="paginationNext" className="btn btn-primary t-next" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
               : <button ref="paginationNext" className="btn btn-primary t-next" disabled>next</button> }
           </td></tr>
@@ -193,10 +193,10 @@ class DataLoader {
     return this.loadWithUpdatedParams({page});
   }
   nextPage(event) {
-    return this.goToPage(event, this.currentState().next);
+    return this.goToPage(event, this.currentState().nextPage);
   }
   prevPage(event) {
-    return this.goToPage(event, this.currentState().previous);
+    return this.goToPage(event, this.currentState().previousPage);
   }
   orderBy(event, ordering) {
     if (event.ctrlKey || event.altKey || event.shiftKey) return;
@@ -234,13 +234,13 @@ class DataLoader {
     let haveCount = !isNullOrUndefined(dataResponse.count);
     let state = {
       count: haveCount ? dataResponse.count : '?',
-      next: dataResponse.next,
-      previous: dataResponse.previous,
+      nextPage: dataResponse.next,
+      previousPage: dataResponse.previous,
       results: dataResponse.results,
       page: page,
       page0: page - 1,
-      hasNext: !!dataResponse.next,
-      hasPrev: !!dataResponse.previous,
+      hasNextPage: !!dataResponse.next,
+      hasPreviousPage: !!dataResponse.previous,
       nextQuery: buildPageUrl(dataResponse.next),
       prevQuery: buildPageUrl(dataResponse.previous),
       ordering: dataRequest.ordering || null
