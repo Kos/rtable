@@ -685,8 +685,8 @@ var DataLoader = function () {
   }, {
     key: 'reportError',
     value: function reportError(err) {
-      if (window.console) {
-        window.console.error(err);
+      if (deps.window.console) {
+        deps.window.console.error(err);
       }
     }
   }]);

@@ -267,8 +267,8 @@ class DataLoader {
   }
 
   reportError(err) {
-    if (window.console) {
-      window.console.error(err);
+    if (deps.window.console) {
+      deps.window.console.error(err);
     }
   }
 }

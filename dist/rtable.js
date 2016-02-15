@@ -688,8 +688,8 @@
     }, {
       key: 'reportError',
       value: function reportError(err) {
-        if (window.console) {
-          window.console.error(err);
+        if (deps.window.console) {
+          deps.window.console.error(err);
         }
       }
     }]);
@@ -788,4 +788,4 @@
   exports.deps = deps;
   exports['default'] = RTable;
 
-}((this.RTable = {}),React));
+}((this.RTable = this.RTable || {}),React));

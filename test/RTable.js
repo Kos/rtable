@@ -1,7 +1,7 @@
 import React from 'react'; // eslint-disable-line no-unused-vars
 import ReactDOM from 'react-dom';
 import ReactTestUtils from 'react-addons-test-utils';
-import expect from 'expect';
+import expect, { createSpy } from 'expect';
 import MockPromise from './MockPromise';
 import isEqual from 'is-equal';
 import sinon from 'sinon';
@@ -51,9 +51,12 @@ describe("RTable", function() {
       return rtable;
     };
     this._window = deps.window;
-    deps.window = {
+    deps.window = this.window = {
       location: {
         href: "http://example.com/rtable/"
+      },
+      console: {
+        error: createSpy()
       }
     };
     this.setLocation = loc => {
@@ -87,7 +90,31 @@ describe("RTable", function() {
       expect(component.state.hasNextPage).toEqual(false);
     });
 
-    it("should report errors with invalid response");
+    it("should report errors with invalid response", function(done) {
+      // TODO use a good mock promise here, rewrite as sync
+      this.clock.restore();
+      var resolve;
+      var promise = new Promise((x, y) => {resolve=x;});
+      this.dataSource.promise = promise;
+      resolve({
+        count: "bla",
+        next: undefined,
+        results: {1: "sadf", 2: "fdas"}
+      });
+      ReactTestUtils.renderIntoDocument(
+        <RTable dataSource={this.dataSource} />);
+      expect(this.window.console.error).toNotHaveBeenCalled();
+      setTimeout(() => {
+        expect(this.window.console.error).toHaveBeenCalled();
+        let args = this.window.console.error.calls[0].arguments;
+        let errorMessage = args[0].message;
+        expect(errorMessage).toContain("resp.count should be a number");
+        expect(errorMessage).toContain("resp.next should be defined");
+        expect(errorMessage).toContain("resp.previous should be defined");
+        expect(errorMessage).toContain("resp.results should be an array");
+        done();
+      }, 1);
+    });
 
     it("should take initial request data from window url", function() {
       this.setLocation('http://example.com/?filter1=10&ordering=quux&page=5');
