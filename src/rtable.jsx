@@ -338,7 +338,7 @@ function validate(f) {
     }
   }
   if (errors.length > 0) {
-    throw new Error(errors);
+    throw new Error(errors.join(', '));
   }
   return true;
 }

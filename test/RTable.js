@@ -106,12 +106,29 @@ describe("RTable", function() {
       expect(this.window.console.error).toNotHaveBeenCalled();
       setTimeout(() => {
         expect(this.window.console.error).toHaveBeenCalled();
-        let args = this.window.console.error.calls[0].arguments;
-        let errorMessage = args[0].message;
-        expect(errorMessage).toContain("resp.count should be a number");
-        expect(errorMessage).toContain("resp.next should be defined");
-        expect(errorMessage).toContain("resp.previous should be defined");
-        expect(errorMessage).toContain("resp.results should be an array");
+        let error = this.window.console.error.calls[0].arguments[0];
+        expect(error.message).toContain("resp.count should be a number");
+        expect(error.message).toContain("resp.next should be defined");
+        expect(error.message).toContain("resp.previous should be defined");
+        expect(error.message).toContain("resp.results should be an array");
+        done();
+      }, 1);
+    });
+
+    it("should report errors with failed request", function(done) {
+      // TODO use a good mock promise here, rewrite as sync
+      this.clock.restore();
+      var reject;
+      var promise = new Promise((x, y) => {reject=y;});
+      this.dataSource.promise = promise;
+      reject(new Error("Failed to stuff"));
+      ReactTestUtils.renderIntoDocument(
+        <RTable dataSource={this.dataSource} />);
+      expect(this.window.console.error).toNotHaveBeenCalled();
+      setTimeout(() => {
+        expect(this.window.console.error).toHaveBeenCalled();
+        let error = this.window.console.error.calls[0].arguments[0];
+        expect(error.message).toContain("Failed to stuff");
         done();
       }, 1);
     });
