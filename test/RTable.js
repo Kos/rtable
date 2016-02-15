@@ -3,8 +3,32 @@ import ReactDOM from 'react-dom';
 import ReactTestUtils from 'react-addons-test-utils';
 import expect from 'expect';
 import MockPromise from './MockPromise';
+import isEqual from 'is-equal';
 
 import RTable, { deps } from '../src/rtable'; //eslint-disable-line no-unused-vars
+
+expect.extend({
+  toLookLike(expected) {
+    let allKeys = Array.from(new Set([...Object.keys(this.actual),
+                                      ...Object.keys(expected)]));
+    try {
+      expect.assert(
+        allKeys.every(key => (
+          key in this.actual && key in expected &&
+          isEqual(this.actual[key], expected[key]))),
+        'expected %s to look like %s',
+        this.actual,
+        expected
+      );
+    } catch (e) {
+      e.showDiff = true;
+      e.actual = this.actual;
+      e.expected = expected;
+      throw e;
+    }
+  }
+});
+
 
 afterEach(function() {
   expect.restoreSpies();
@@ -45,15 +69,11 @@ describe("RTable", function() {
       let component = ReactTestUtils.renderIntoDocument(
         <RTable dataSource={this.dataSource} />);
       let lastDataRequest = this.dataSource.lastDataRequest;
-      // expect(lastDataRequest).toEqual({
-      //   page: 1,
-      //   ordering: null,
-      //   filters: {}
-      // });
-      // ... yeah, I wish
-      expect(lastDataRequest.page).toEqual(1);
-      expect(lastDataRequest.ordering).toEqual(null);
-      expect(lastDataRequest.filters).toEqual({});
+      expect(lastDataRequest).toLookLike({
+        page: 1,
+        ordering: null,
+        filters: {}
+      });
       this.dataSource.resolve({
         count: 5,
         next: null,
@@ -75,17 +95,13 @@ describe("RTable", function() {
       ReactTestUtils.renderIntoDocument(
         <RTable dataSource={this.dataSource} filters={filters}/>);
       let lastDataRequest = this.dataSource.lastDataRequest;
-      // expect(lastDataRequest).toEqual({
-      //   page: 5,
-      //   ordering: "quux",
-      //   filters: {
-      //     filter1: "10",
-      //   }
-      // });
-      // ... yeah, I wish... again
-      expect(lastDataRequest.page).toEqual('5');
-      expect(lastDataRequest.ordering).toEqual("quux");
-      expect(lastDataRequest.filters).toEqual({filter1: "10"});
+      expect(lastDataRequest).toLookLike({
+        page: "5",
+        ordering: "quux",
+        filters: {
+          filter1: "10"
+        }
+      });
     });
     // Once the table renders, the initial request should contain the URL's state
 
