@@ -383,10 +383,10 @@
             ),
             React.createElement(
               'tr',
-              { ref: 'filterRow' },
+              null,
               React.createElement(
                 'td',
-                { className: 'form-inline', colSpan: columns.length },
+                { ref: 'filterContainer', className: 'form-inline', colSpan: columns.length },
                 filters.map(function (filter, i) {
                   return React.createElement(
                     'span',
@@ -532,10 +532,15 @@
       key: 'loadWithUpdatedParams',
       value: function loadWithUpdatedParams(newParams) {
         var state = this.currentState();
+        var clearNulls = function clearNulls(obj) {
+          return objectValueFilter(function (x) {
+            return !isNullOrUndefined(x);
+          }, obj);
+        };
         var newDataRequest = new DataRequest({
           page: newParams.page !== undefined ? newParams.page : state.page,
           ordering: newParams.ordering !== undefined ? newParams.ordering : state.ordering,
-          filters: Object.assign({}, state.filters, newParams.filters || {})
+          filters: clearNulls(Object.assign({}, state.filters, newParams.filters || {}))
         });
         if (deps.window.history && deps.window.history.replaceState) {
           deps.window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
@@ -729,6 +734,15 @@
     return fields.reduce(function (a, x) {
       if (o.hasOwnProperty(x)) a[x] = o[x];
       return a;
+    }, {});
+  }
+
+  function objectValueFilter(fn, obj) {
+    return Object.keys(obj).reduce(function (res, key) {
+      if (fn(obj[key])) {
+        res[key] = obj[key];
+      }
+      return res;
     }, {});
   }
 

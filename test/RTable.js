@@ -4,6 +4,7 @@ import ReactTestUtils from 'react-addons-test-utils';
 import expect from 'expect';
 import MockPromise from './MockPromise';
 import isEqual from 'is-equal';
+import sinon from 'sinon';
 
 import RTable, { deps } from '../src/rtable'; //eslint-disable-line no-unused-vars
 
@@ -38,7 +39,7 @@ describe("RTable", function() {
 
   beforeEach(function() {
     this.dataSource = new FakeDataSource();
-    this.renderWithData = function({props, results}) {
+    this.renderWithResults = function({props, results}) {
       return this.renderWithResponse({props: props, response: {
         'count': results.length, 'next': null, 'previous': null,
         'results': results}});
@@ -58,18 +59,20 @@ describe("RTable", function() {
     this.setLocation = loc => {
       deps.window.location.href = loc;
     };
+    this.clock = sinon.useFakeTimers();
+
   });
 
   afterEach(function() {
     deps.window = this._window;
+    this.clock.restore();
   });
 
   describe("behaviour", function() {
     it("should download initial data", function() {
       let component = ReactTestUtils.renderIntoDocument(
         <RTable dataSource={this.dataSource} />);
-      let lastDataRequest = this.dataSource.lastDataRequest;
-      expect(lastDataRequest).toLookLike({
+      expect(this.dataSource.lastDataRequest).toLookLike({
         page: 1,
         ordering: null,
         filters: {}
@@ -94,8 +97,7 @@ describe("RTable", function() {
       ];
       ReactTestUtils.renderIntoDocument(
         <RTable dataSource={this.dataSource} filters={filters}/>);
-      let lastDataRequest = this.dataSource.lastDataRequest;
-      expect(lastDataRequest).toLookLike({
+      expect(this.dataSource.lastDataRequest).toLookLike({
         page: "5",
         ordering: "quux",
         filters: {
@@ -103,7 +105,6 @@ describe("RTable", function() {
         }
       });
     });
-    // Once the table renders, the initial request should contain the URL's state
 
     it("should fetch next page", function() {
       let component = this.renderWithResponse({
@@ -116,33 +117,111 @@ describe("RTable", function() {
         }
       });
       // TODO drop the default page 1. It should be null or something.
-      expect(this.dataSource.dataRequests[0].page).toEqual(1);
+      expect(this.dataSource.lastDataRequest).toLookLike({
+        page: 1,
+        ordering: null,
+        filters: {}
+      });
       let elem = component.refs.paginationNext;
       ReactTestUtils.Simulate.click(elem);
       expect(this.dataSource.dataRequests.length).toEqual(2);
-      expect(this.dataSource.lastDataRequest.page).toEqual("xxx");
-      expect(this.dataSource.lastDataRequest.ordering).toEqual(null);
-      expect(this.dataSource.lastDataRequest.filters).toEqual({});
+      expect(this.dataSource.lastDataRequest).toLookLike({
+        page: "xxx",
+        ordering: null,
+        filters: {}
+      });
     });
 
-    it("should sort");
-    // Clicking a column should trigger a new request (x2)
+    it("should perform ordering when a column is clicked", function() {
+      let component = this.renderWithResults({
+        props: {
+          ordering: "all",
+          columns: [{name: "foo"}]
+        },
+        results: []
+      });
+      expect(this.dataSource.lastDataRequest).toLookLike({
+        page: 1,
+        ordering: null,
+        filters: {}
+      });
+      let elem = component.refs.columnHeaderRow.children[0];
+      ReactTestUtils.Simulate.click(elem);
+      expect(this.dataSource.dataRequests.length).toEqual(2);
+      expect(this.dataSource.lastDataRequest).toLookLike({
+        page: 1,
+        ordering: "foo",
+        filters: {}
+      });
+      this.dataSource.resolve({count: 0, next: null, previous: null, results: []});
+      ReactTestUtils.Simulate.click(elem);
+      expect(this.dataSource.dataRequests.length).toEqual(3);
+      expect(this.dataSource.lastDataRequest).toLookLike({
+        page: 1,
+        ordering: "-foo",
+        filters: {}
+      });
+    });
 
-    it("should filter selects immediately");
-    // Clicking a filter should trigger a new request
+    it("should filter selects (immediately)", function() {
+      let component = this.renderWithResults({
+        props: {
+          filters: [{"name": "foo", "choices": [null, "one", "two"]}]
+        },
+        results: []
+      });
+      let elem = component.refs.filterContainer.querySelector('select');
+      elem.value = "one";
+      ReactTestUtils.Simulate.input(elem);
+      expect(this.dataSource.dataRequests.length).toEqual(2);
+      expect(this.dataSource.lastDataRequest).toLookLike({
+        page: 1,
+        ordering: null,
+        filters: {
+          foo: "one"
+        }
+      });
+      this.dataSource.resolve({count: 0, next: null, previous: null, results: []});
+      elem.value = null;
+      ReactTestUtils.Simulate.input(elem);
+      expect(this.dataSource.dataRequests.length).toEqual(3);
+      expect(this.dataSource.lastDataRequest).toLookLike({
+        page: 1,
+        ordering: null,
+        filters: {}
+      });
+    });
 
-    it("should filter selects with value=null");
-    // Clicking a filter should trigger a new request
-
-    it("should filter inputs with a delay");
-    // Clicking a filter should trigger a new request LATER
+    it("should filter inputs with a delay", function() {
+      let component = this.renderWithResults({
+        props: {
+          filters: [{"name": "foo"}]
+        },
+        results: []
+      });
+      let elem = component.refs.filterContainer.querySelector('input');
+      elem.value = "ding";
+      ReactTestUtils.Simulate.input(elem);
+      expect(this.dataSource.dataRequests.length).toEqual(1);
+      this.clock.tick(component.loader.filterDelay-1);
+      expect(this.dataSource.dataRequests.length).toEqual(1);
+      this.clock.tick(1);
+      expect(this.dataSource.dataRequests.length).toEqual(2);
+      expect(this.dataSource.lastDataRequest).toLookLike({
+        page: 1,
+        ordering: null,
+        filters: {
+          foo: "ding"
+        }
+      });
+    });
   });
 
 
   describe("rendering", function() {
 
     it("should render", function() {
-      let component = this.renderWithData({
+      let component = this.renderWithResults({
         props: {}, results: []
       });
       let renderedDOM = ReactDOM.findDOMNode(component);
@@ -150,7 +229,7 @@ describe("RTable", function() {
     });
 
     it("should render row values", function() {
-      let rtable = this.renderWithData({
+      let rtable = this.renderWithResults({
         props: {
           dataUrl: "/api",
           columns: [
@@ -173,7 +252,7 @@ describe("RTable", function() {
     });
 
     it("should render column headers", function() {
-      let rtable = this.renderWithData({
+      let rtable = this.renderWithResults({
         props: {
           dataUrl: "/api",
           columns: [
@@ -193,7 +272,7 @@ describe("RTable", function() {
 
     it("should render classes", function() {
       // TODO opt-in configurable class names, don't just default to Boostrap
-      let rtable = this.renderWithData({
+      let rtable = this.renderWithResults({
         props: {
           dataUrl: "/api",
           columns: [
@@ -211,10 +290,9 @@ describe("RTable", function() {
       expectClasses(table).toEqual(['table', 'table-striped', 'table-hover']);
       expectClasses(rtable.refs.paginationContainer).toEqual(['text-center']);
       expectClasses(rtable.refs.columnHeaderRow).toEqual([]);
-      expectClasses(rtable.refs.filterRow).toEqual([]);
-      expectClasses(rtable.refs.filterRow.children[0]).toEqual(['form-inline']);
-      expectClasses(rtable.refs.filterRow.querySelector('input')).toEqual(['form-control', 'input-sm']);
-      expectClasses(rtable.refs.filterRow.querySelector('select')).toEqual(['form-control', 'input-sm']);
+      expectClasses(rtable.refs.filterContainer).toEqual(['form-inline']);
+      expectClasses(rtable.refs.filterContainer.querySelector('input')).toEqual(['form-control', 'input-sm']);
+      expectClasses(rtable.refs.filterContainer.querySelector('select')).toEqual(['form-control', 'input-sm']);
       expectClasses(rtable.refs.rowContainer).toEqual([]);
       // TODO drop t-next, t-prev
       expectClasses(rtable.refs.paginationNext).toEqual(['btn', 'btn-primary', 't-next']);
@@ -223,7 +301,7 @@ describe("RTable", function() {
 
     it("should render initial ordering", function() {
       this.setLocation("http://example.com/?ordering=-foo");
-      let rtable = this.renderWithData({
+      let rtable = this.renderWithResults({
         props: {
           dataUrl: "/api",
           columns: [{'name': 'foo'}]
@@ -235,7 +313,7 @@ describe("RTable", function() {
 
     it("should render initial filter values", function() {
       this.setLocation("/?filter1=f1value&filter2=f2value");
-      let rtable = this.renderWithData({
+      let rtable = this.renderWithResults({
         props: {
           dataUrl: "/api",
           columns: [],
@@ -248,8 +326,8 @@ describe("RTable", function() {
         },
         results: []
       });
-      let input = rtable.refs.filterRow.querySelector("input");
-      let select = rtable.refs.filterRow.querySelector("select");
+      let input = rtable.refs.filterContainer.querySelector("input");
+      let select = rtable.refs.filterContainer.querySelector("select");
       expect(input.value).toEqual("f1value");
       expect(select.value).toEqual("f2value");
     });
@@ -289,7 +367,7 @@ class FakeDataSource {
     this.lastDataRequest = dataRequest;
     return this.promise;
   }
-  resolve(data) {
-    this.promise.resolveNow(data);
+  resolve(dataResponse) {
+    this.promise.resolveNow(dataResponse);
   }
 }

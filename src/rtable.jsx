@@ -59,7 +59,7 @@ export default class RTable extends React.Component {
               ? <a ref="paginationNext" className="btn btn-primary t-next" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
               : <button ref="paginationNext" className="btn btn-primary t-next" disabled>next</button> }
           </td></tr>
-          <tr ref="filterRow"><td className="form-inline" colSpan={columns.length}>
+          <tr><td ref="filterContainer" className="form-inline" colSpan={columns.length}>
             {filters.map((filter, i) =>
               <span key={i}>
                 <label>
@@ -143,10 +143,11 @@ class DataLoader {
   }
   loadWithUpdatedParams(newParams) {
     let state = this.currentState();
+    let clearNulls = obj => objectValueFilter(x => !isNullOrUndefined(x), obj);
     let newDataRequest = new DataRequest({
       page: (newParams.page !== undefined ? newParams.page : state.page),
       ordering: (newParams.ordering !== undefined ? newParams.ordering : state.ordering),
-      filters: Object.assign({}, state.filters, newParams.filters || {})
+      filters: clearNulls(Object.assign({}, state.filters, newParams.filters || {}))
     });
     if (deps.window.history && deps.window.history.replaceState) {
       deps.window.history.replaceState({}, '', this.encodeWindowUrl(newDataRequest));
@@ -300,6 +301,15 @@ function pick(o, fields) {
   return fields.reduce((a, x) => {
     if(o.hasOwnProperty(x)) a[x] = o[x];
     return a;
+  }, {});
+}
+
+function objectValueFilter(fn, obj) {
+  return Object.keys(obj).reduce((res, key) => {
+    if (fn(obj[key])) {
+      res[key] = obj[key];
+    }
+    return res;
   }, {});
 }
 
