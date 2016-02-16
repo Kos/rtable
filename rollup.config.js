@@ -1,7 +1,7 @@
 import babel from 'rollup-plugin-babel';
 
 export default {
-  entry: 'src/rtable.jsx',
+  entry: 'src/dist.js',
   dest: 'dist/rtable.js',
   format: 'iife',
   moduleName: 'RTable',

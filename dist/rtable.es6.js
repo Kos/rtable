@@ -574,7 +574,7 @@ var DataLoader = function () {
       var validateResponse = function validateResponse(resp) {
         validate(function (check) {
           check.object(resp, "resp");
-          check.number(resp.count, "resp.count");
+          check.numberOrNull(resp.count, "resp.count");
           check.defined(resp.next, "resp.next");
           check.defined(resp.previous, "resp.previous");
           check.array(resp.results, "resp.results");
@@ -711,8 +711,6 @@ var DataRequest = function () {
   return DataRequest;
 }();
 
-RTable.AjaxDataSource = AjaxDataSource;
-
 function delayed(delay, fn) {
   var timeout = null;
   return function () {
@@ -757,6 +755,9 @@ function validate(f) {
     number: function number(val, label) {
       return checkCondition(typeof val === 'number', label, "should be a number");
     },
+    numberOrNull: function numberOrNull(val, label) {
+      return checkCondition(val === null || typeof val === 'number', label, "should be a number or null");
+    },
     array: function array(val, label) {
       return checkCondition(val.constructor === Array, label, "should be an array");
     },
@@ -782,4 +783,6 @@ function validate(f) {
   return true;
 }
 
-export { deps };export default RTable;
+RTable.AjaxDataSource = AjaxDataSource;
+
+export default RTable;
