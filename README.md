@@ -4,8 +4,8 @@ AJAX-powered table / data grid, powered by React and inspired by JQGrid.
 
 Demos: [Github API][github], [StackOverflow API][stack]
 
-[github]: https://cdn.rawgit.com/Kos/rtable/1b285b7b/demo.html
-[stack]:  https://cdn.rawgit.com/Kos/rtable/1b285b7b/demo2.html
+[github]: https://cdn.rawgit.com/Kos/rtable/a8acc6aa/demo.html
+[stack]:  https://cdn.rawgit.com/Kos/rtable/a8acc6aa/demo2.html
 
 Design goals:
 
@@ -14,7 +14,7 @@ Design goals:
     - page refresh and bookmarking works (url is updated as you navigate)
     - control-click on buttons works (navigation is normal links with extra JS on top)
 
-Status: *proof of concept*, has some tests, needs a little tidying up still
+Status: *alpha*, works, has tests, needs more features, ready for some field testing.
 
 ## Features
 
@@ -50,14 +50,6 @@ Status: *proof of concept*, has some tests, needs a little tidying up still
     - Probably not very much. It's designed to be self-contained and it manages
       its own state. Open an issue if you think we can do better!
 
-
-## Misc Todos
-
-- [ ] Go to page N
-- [ ] Multi-column sorting
-- [ ] Multi-choice filtering
-- [ ] Advanced pagination (cursors)
-- [ ] URL param prefixing (allow multiple tables on same page)
 
 ## Howto
 
@@ -100,7 +92,7 @@ You can write your own or use the `AjaxDataSource` helper like so:
             "results": [
               ...
             ]
-          }
+          };
         }
       });
     }
@@ -219,3 +211,8 @@ Some shorthands are available:
 
 - '"somechoice"' expands to `{"value": "somechoice"}`
 - `null` expands to `{"value": null, "label": "}`
+
+
+## License
+
+ISC
