@@ -1,7 +1,7 @@
 import React from 'react';
 import { parseUri, updateQueryStringMultiple } from './UrlUtils';
 import { isNullOrUndefined } from './utils';
-import { DefaultDataSource, AjaxDataSource } from './AjaxDataSource';
+import { DefaultDataSource } from './AjaxDataSource';
 
 export let deps = {
   window: window
@@ -172,7 +172,7 @@ class DataLoader {
     let validateResponse = resp => {
       validate(check => {
         check.object(resp, "resp");
-        check.number(resp.count, "resp.count");
+        check.numberOrNull(resp.count, "resp.count");
         check.defined(resp.next, "resp.next");
         check.defined(resp.previous, "resp.previous");
         check.array(resp.results, "resp.results");
@@ -285,8 +285,6 @@ class DataRequest {
   }
 }
 
-RTable.AjaxDataSource = AjaxDataSource;
-
 function delayed(delay, fn) {
   let timeout = null;
   return function() {
@@ -324,6 +322,7 @@ function validate(f) {
   let checkObj = {
     defined: (val, label) => checkCondition(typeof val !== 'undefined', label, "should be defined"),
     number: (val, label) => checkCondition(typeof val === 'number', label, "should be a number"),
+    numberOrNull: (val, label) => checkCondition(val === null || typeof val === 'number', label, "should be a number or null"),
     array: (val, label) => checkCondition(val.constructor === Array, label, "should be an array"),
     string: (val, label) => checkCondition(typeof val === 'string', label, "should be a string"),
     object: (val, label) => checkCondition(val && typeof val === 'object', label, "should be an object")
