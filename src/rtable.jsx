@@ -124,8 +124,10 @@ class DataLoader {
       prevPage: this.prevPage.bind(this),
       orderBy: column => (event => this.orderBy(event, column)),
       orderToggle: column => (event => this.orderToggle(event, column)),
-      filter: key => (event => this.filter(event, key)),
-      filterDelayed: key => delayed(this.filterDelay, event => this.filter(event, key))
+      filter: key => (event => this.filter(event.target, key)),
+      filterDelayed: key => delayed(this.filterDelay,
+                                    eventTarget => this.filter(eventTarget, key),
+                                    event => [event.target])
     };
   }
   loadInitial() {
@@ -217,8 +219,11 @@ class DataLoader {
     }
     return this.orderBy(event, ordering);
   }
-  filter(event, key) {
-    let newFilterValue = event.target.value || null;
+  filter(eventTarget, key) {
+    // HACK? This takes eventTarget, not Event,
+    // since react recycles event objects
+    // which make this not work with delayed()
+    let newFilterValue = eventTarget.value || null;
     return this.loadWithUpdatedParams({filters: {[key]: newFilterValue}});
   }
   buildStateFromResponse(dataResponse, dataRequest) {
@@ -285,13 +290,18 @@ class DataRequest {
   }
 }
 
-function delayed(delay, fn) {
+function delayed(delay, fn, argFn) {
+  // Wrap fn with a function that calls fn after given delay.
+  // If argFn is passed, fn will be scheduled to be called with argFn(...args)
+  // instead of actual passed args.
+  // Sorry :(
   let timeout = null;
-  return function() {
+  return function(...args) {
     if (timeout) {
       clearTimeout(timeout);
     }
-    timeout = setTimeout(() => fn.apply(null, arguments), delay);
+    let callArgs = (argFn ? argFn(...args) : args);
+    timeout = setTimeout(() => fn(...callArgs), delay);
   };
 }
 

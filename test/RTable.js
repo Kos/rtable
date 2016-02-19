@@ -207,7 +207,7 @@ describe("RTable", function() {
       });
     });
 
-    it.only("should filter selects (immediately)", function() {
+    it("should filter selects (immediately)", function() {
       let component = this.renderWithResults({
         props: {
           filters: [{"name": "foo", "choices": [null, "one", "two"]}]
@@ -244,7 +244,7 @@ describe("RTable", function() {
         results: []
       });
       let elem = component.refs.filterContainer.querySelector('input');
-      elem.getDOMNode().value = "ding";
+      elem.value = "ding";
       ReactTestUtils.Simulate.input(elem);
       expect(this.dataSource.dataRequests.length).toEqual(1);
       this.clock.tick(component.loader.filterDelay-1);

@@ -73,6 +73,16 @@ var RTable = (function (React) {
     return call && (typeof call === "object" || typeof call === "function") ? call : self;
   };
 
+  babelHelpers.toConsumableArray = function (arr) {
+    if (Array.isArray(arr)) {
+      for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+      return arr2;
+    } else {
+      return Array.from(arr);
+    }
+  };
+
   babelHelpers;
 
   // http://blog.stevenlevithan.com/archives/parseuri
@@ -498,12 +508,14 @@ var RTable = (function (React) {
         },
         filter: function filter(key) {
           return function (event) {
-            return _this3.filter(event, key);
+            return _this3.filter(event.target, key);
           };
         },
         filterDelayed: function filterDelayed(key) {
-          return delayed(_this3.filterDelay, function (event) {
-            return _this3.filter(event, key);
+          return delayed(_this3.filterDelay, function (eventTarget) {
+            return _this3.filter(eventTarget, key);
+          }, function (event) {
+            return [event.target];
           });
         }
       };
@@ -631,8 +643,11 @@ var RTable = (function (React) {
       }
     }, {
       key: 'filter',
-      value: function filter(event, key) {
-        var newFilterValue = event.target.value || null;
+      value: function filter(eventTarget, key) {
+        // HACK? This takes eventTarget, not Event,
+        // since react recycles event objects
+        // which make this not work with delayed()
+        var newFilterValue = eventTarget.value || null;
         return this.loadWithUpdatedParams({ filters: babelHelpers.defineProperty({}, key, newFilterValue) });
       }
     }, {
@@ -714,16 +729,24 @@ var RTable = (function (React) {
     return DataRequest;
   }();
 
-  function delayed(delay, fn) {
+  function delayed(delay, fn, argFn) {
+    // Wrap fn with a function that calls fn after given delay.
+    // If argFn is passed, fn will be scheduled to be called with argFn(...args)
+    // instead of actual passed args.
+    // Sorry :(
     var timeout = null;
     return function () {
-      var _arguments = arguments;
-
       if (timeout) {
         clearTimeout(timeout);
       }
+
+      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      var callArgs = argFn ? argFn.apply(undefined, args) : args;
       timeout = setTimeout(function () {
-        return fn.apply(null, _arguments);
+        return fn.apply(undefined, babelHelpers.toConsumableArray(callArgs));
       }, delay);
     };
   }
