@@ -46,39 +46,37 @@ export default class RTable extends React.Component {
       return <tr key={m}>{cells}</tr>;
     });
     return (
-      <table className="table table-striped table-hover">
+      <table className="table table-striped table-hover" ref="table">
         <thead>
-          <tr><td ref="paginationContainer" className="text-center" colSpan={columns.length}>
-            {this.state.hasPreviousPage
-              ? <a ref="paginationPrevious" className="btn btn-primary t-prev" href={this.state.prevQuery} onClick={this.loader.fn.prevPage}>prev</a>
-              : <button ref="paginationPrevious" className="btn btn-primary t-prev" disabled>prev</button> }
-            {' '}
-            <PaginationInfo {...this.state} />
-            {' '}
-            {this.state.hasNextPage
-              ? <a ref="paginationNext" className="btn btn-primary t-next" href={this.state.nextQuery} onClick={this.loader.fn.nextPage}>next</a>
-              : <button ref="paginationNext" className="btn btn-primary t-next" disabled>next</button> }
-          </td></tr>
-          <tr><td ref="filterContainer" className="form-inline" colSpan={columns.length}>
-            {filters.map((filter, i) =>
-              <span key={i}>
-                <label>
-                  {filter.label+':'}
-                </label>
-                {' '}
-                {filter.choices
-                  ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.name)} defaultValue={this.state.initialFilterState[filter.name]}>
-                      {filter.choices.map((choice, j) =>
-                        <FilterChoiceOption key={j} choice={choice} />
-                      )}
-                    </select>
-                  : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.name)} defaultValue={this.state.initialFilterState[filter.name]} />
-                }
-                {' '}
-              </span>
-            )}
-          </td></tr>
-          <tr ref="columnHeaderRow">{header}</tr>
+          <tr>
+            <td ref="paginationContainer" className="text-center" colSpan={columns.length}>
+              <Pagination loader={this.loader} {...this.state} />
+            </td>
+          </tr>
+          <tr>
+            <td ref="filterContainer" className="form-inline" colSpan={columns.length}>
+              {filters.map((filter, i) =>
+                <span key={i}>
+                  <label>
+                    {filter.label+':'}
+                  </label>
+                  {' '}
+                  {filter.choices
+                    ? <select className="form-control input-sm " onInput={this.loader.fn.filter(filter.name)} defaultValue={this.state.initialFilterState[filter.name]}>
+                        {filter.choices.map((choice, j) =>
+                          <FilterChoiceOption key={j} choice={choice} />
+                        )}
+                      </select>
+                    : <input className="form-control input-sm" onInput={this.loader.fn.filterDelayed(filter.name)} defaultValue={this.state.initialFilterState[filter.name]} />
+                  }
+                  {' '}
+                </span>
+              )}
+            </td>
+          </tr>
+          <tr ref="columnHeaderRow">
+            {header}
+          </tr>
         </thead>
         <tbody ref="rowContainer">
           {rows}
@@ -86,16 +84,37 @@ export default class RTable extends React.Component {
       </table>
     );
   }
+  find(cls) {
+    return this.refs.table.querySelector(cls);
+  }
 }
 
-function PaginationInfo(props) { // eslint-disable-line no-unused-vars
+function Pagination(props) { // eslint-disable-line no-unused-vars
+  let paginationInfo;
   if (props.count === '?') {
-    return <span>page {props.page}</span>;
+    paginationInfo = <span>page {props.page}</span>;
+  } else {
+    paginationInfo = <span>
+      page {props.page} of {props.pages},
+      results {props.firstResult}-{props.lastResult} of {props.count}
+    </span>;
   }
-  return <span>
-    page {props.page} of {props.pages},
-    results {props.firstResult}-{props.lastResult} of {props.count}
-  </span>;
+
+  // TODO configurable classes; only add t-next t-prev in tests
+  let btn = (text, cls, cond, href, onClick) => (
+      cond ? <a className={"btn btn-primary "+cls} href={href} onClick={onClick}>{text}</a>
+           : <button className={"btn btn-primary "+cls} disabled>{text}</button>
+  );
+
+  return (
+    <span>
+      {btn("prev", "t-prev", props.hasPreviousPage, props.prevQuery, props.loader.fn.prevPage)}
+      {' '}
+      { paginationInfo }
+      {' '}
+      {btn("next", "t-next", props.hasNextPage, props.nextQuery, props.loader.fn.nextPage)}
+    </span>
+  );
 }
 
 function FilterChoiceOption({choice}) { // eslint-disable-line no-unused-vars

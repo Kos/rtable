@@ -46,6 +46,20 @@ babelHelpers.defineProperty = function (obj, key, value) {
   return obj;
 };
 
+babelHelpers.extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
+
 babelHelpers.inherits = function (subClass, superClass) {
   if (typeof superClass !== "function" && superClass !== null) {
     throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
@@ -355,7 +369,7 @@ var RTable = function (_React$Component) {
       });
       return React.createElement(
         'table',
-        { className: 'table table-striped table-hover' },
+        { className: 'table table-striped table-hover', ref: 'table' },
         React.createElement(
           'thead',
           null,
@@ -365,27 +379,7 @@ var RTable = function (_React$Component) {
             React.createElement(
               'td',
               { ref: 'paginationContainer', className: 'text-center', colSpan: columns.length },
-              this.state.hasPreviousPage ? React.createElement(
-                'a',
-                { ref: 'paginationPrevious', className: 'btn btn-primary t-prev', href: this.state.prevQuery, onClick: this.loader.fn.prevPage },
-                'prev'
-              ) : React.createElement(
-                'button',
-                { ref: 'paginationPrevious', className: 'btn btn-primary t-prev', disabled: true },
-                'prev'
-              ),
-              ' ',
-              React.createElement(PaginationInfo, this.state),
-              ' ',
-              this.state.hasNextPage ? React.createElement(
-                'a',
-                { ref: 'paginationNext', className: 'btn btn-primary t-next', href: this.state.nextQuery, onClick: this.loader.fn.nextPage },
-                'next'
-              ) : React.createElement(
-                'button',
-                { ref: 'paginationNext', className: 'btn btn-primary t-next', disabled: true },
-                'next'
-              )
+              React.createElement(Pagination, babelHelpers.extends({ loader: this.loader }, this.state))
             )
           ),
           React.createElement(
@@ -429,33 +423,63 @@ var RTable = function (_React$Component) {
         )
       );
     }
+  }, {
+    key: 'find',
+    value: function find(cls) {
+      return this.refs.table.querySelector(cls);
+    }
   }]);
   return RTable;
 }(React.Component);
 
-function PaginationInfo(props) {
+function Pagination(props) {
   // eslint-disable-line no-unused-vars
+  var paginationInfo = undefined;
   if (props.count === '?') {
-    return React.createElement(
+    paginationInfo = React.createElement(
       'span',
       null,
       'page ',
       props.page
     );
+  } else {
+    paginationInfo = React.createElement(
+      'span',
+      null,
+      'page ',
+      props.page,
+      ' of ',
+      props.pages,
+      ', results ',
+      props.firstResult,
+      '-',
+      props.lastResult,
+      ' of ',
+      props.count
+    );
   }
+
+  // TODO configurable classes; only add t-next t-prev in tests
+  var btn = function btn(text, cls, cond, href, onClick) {
+    return cond ? React.createElement(
+      'a',
+      { className: "btn btn-primary " + cls, href: href, onClick: onClick },
+      text
+    ) : React.createElement(
+      'button',
+      { className: "btn btn-primary " + cls, disabled: true },
+      text
+    );
+  };
+
   return React.createElement(
     'span',
     null,
-    'page ',
-    props.page,
-    ' of ',
-    props.pages,
-    ', results ',
-    props.firstResult,
-    '-',
-    props.lastResult,
-    ' of ',
-    props.count
+    btn("prev", "t-prev", props.hasPreviousPage, props.prevQuery, props.loader.fn.prevPage),
+    ' ',
+    paginationInfo,
+    ' ',
+    btn("next", "t-next", props.hasNextPage, props.nextQuery, props.loader.fn.nextPage)
   );
 }
 

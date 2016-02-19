@@ -166,7 +166,7 @@ describe("RTable", function() {
         ordering: null,
         filters: {}
       });
-      let elem = component.refs.paginationNext;
+      let elem = component.find('.t-next');
       ReactTestUtils.Simulate.click(elem);
       expect(this.dataSource.dataRequests.length).toEqual(2);
       expect(this.dataSource.lastDataRequest).toLookLike({
@@ -338,9 +338,8 @@ describe("RTable", function() {
       expectClasses(rtable.refs.filterContainer.querySelector('input')).toEqual(['form-control', 'input-sm']);
       expectClasses(rtable.refs.filterContainer.querySelector('select')).toEqual(['form-control', 'input-sm']);
       expectClasses(rtable.refs.rowContainer).toEqual([]);
-      // TODO drop t-next, t-prev
-      expectClasses(rtable.refs.paginationNext).toEqual(['btn', 'btn-primary', 't-next']);
-      expectClasses(rtable.refs.paginationPrevious).toEqual(['btn', 'btn-primary', 't-prev']);
+      expectClasses(rtable.find('.t-next')).toEqual(['btn', 'btn-primary', 't-next']);
+      expectClasses(rtable.find('.t-prev')).toEqual(['btn', 'btn-primary', 't-prev']);
     });
 
     it("should render initial ordering", function() {
@@ -391,8 +390,8 @@ describe("RTable", function() {
           results: [1, 2, 3]
         }
       });
-      let buttonNext = rtable.refs.paginationNext;
-      let buttonPrevious = rtable.refs.paginationPrevious;
+      let buttonNext = rtable.refs.table.querySelector('.t-next');
+      let buttonPrevious = rtable.refs.table.querySelector('.t-prev');
       expect(buttonNext.href).toContain("?unrelated=bar&page=nextPageId");
       expect(buttonPrevious.href).toContain("?unrelated=bar&page=prevPageId");
       // TODO expect them to be relative links - buttonNext.href is absolute,
