@@ -40,10 +40,8 @@ export default class RTable extends React.Component {
       </th>
     );
     let rows = this.state.results.map((row, m) => {
-      let cells = columns.map((col, n) =>
-        <td key={n}>{this.getValue(row, col)}</td>
-      );
-      return <tr key={m}>{cells}</tr>;
+      let values = columns.map(col => this.getValue(row, col));
+      return <Item key={m} data={row} values={values} />;
     });
     return (
       <table className="table table-striped table-hover" ref="table">
@@ -87,6 +85,13 @@ export default class RTable extends React.Component {
   find(cls) {
     return this.refs.table.querySelector(cls);
   }
+}
+
+function Item(props) {  // eslint-disable-line no-unused-vars
+  let cells = props.values.map((col, n) =>
+    <td key={n}>{col}</td>
+  );
+  return <tr>{cells}</tr>;
 }
 
 function Pagination(props) { // eslint-disable-line no-unused-vars

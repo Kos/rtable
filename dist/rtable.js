@@ -357,18 +357,10 @@ var RTable = (function (React) {
           );
         });
         var rows = this.state.results.map(function (row, m) {
-          var cells = columns.map(function (col, n) {
-            return React.createElement(
-              'td',
-              { key: n },
-              _this2.getValue(row, col)
-            );
+          var values = columns.map(function (col) {
+            return _this2.getValue(row, col);
           });
-          return React.createElement(
-            'tr',
-            { key: m },
-            cells
-          );
+          return React.createElement(Item, { key: m, data: row, values: values });
         });
         return React.createElement(
           'table',
@@ -434,6 +426,22 @@ var RTable = (function (React) {
     }]);
     return RTable;
   }(React.Component);
+
+  function Item(props) {
+    // eslint-disable-line no-unused-vars
+    var cells = props.values.map(function (col, n) {
+      return React.createElement(
+        'td',
+        { key: n },
+        col
+      );
+    });
+    return React.createElement(
+      'tr',
+      null,
+      cells
+    );
+  }
 
   function Pagination(props) {
     // eslint-disable-line no-unused-vars
