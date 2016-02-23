@@ -1,5 +1,8 @@
 {
-  "extends": "eslint:recommended",
+  "plugins": [
+    "react"
+  ],
+  "extends": "plugin:react/recommended",
   "parserOptions": {
     sourceType: "module",
     "ecmaVersion": 6,
@@ -11,12 +14,11 @@
     "no-unused-vars": [2, {"vars": "local", "args": "none"}],
     "indent": [2, 2],
     "semi": [2, "always"],
-    "eqeqeq": [2]
+    "eqeqeq": [2],
+    "react/prop-types": [0] // some other time
   },
   "env": {
     "browser": true,
-    "jquery": true,
     "mocha": true,
-    "es6": true
   },
 }

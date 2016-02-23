@@ -26,6 +26,7 @@
     "babel-preset-es2015-rollup": "^1.1.1",
     "bootstrap": "^3.3.6",
     "eslint": "^2.1.0",
+    "eslint-plugin-react": "^4.0.0",
     "expect": "^1.14.0",
     "expect-jsx": "^2.3.0",
     "jsdom": "^8.0.4",

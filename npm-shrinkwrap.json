@@ -1057,6 +1057,11 @@
         }
       }
     },
+    "eslint-plugin-react": {
+      "version": "4.0.0",
+      "from": "eslint-plugin-react@latest",
+      "resolved": "https://registry.npmjs.org/eslint-plugin-react/-/eslint-plugin-react-4.0.0.tgz"
+    },
     "espree": {
       "version": "3.0.1",
       "from": "espree@>=3.0.0 <4.0.0",

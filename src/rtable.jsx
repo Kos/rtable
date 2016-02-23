@@ -87,14 +87,14 @@ export default class RTable extends React.Component {
   }
 }
 
-function Item(props) {  // eslint-disable-line no-unused-vars
+function Item(props) {
   let cells = props.values.map((col, n) =>
     <td key={n}>{col}</td>
   );
   return <tr>{cells}</tr>;
 }
 
-function Pagination(props) { // eslint-disable-line no-unused-vars
+function Pagination(props) {
   let paginationInfo;
   if (props.count === '?') {
     paginationInfo = <span>page {props.page}</span>;
@@ -122,7 +122,7 @@ function Pagination(props) { // eslint-disable-line no-unused-vars
   );
 }
 
-function FilterChoiceOption({choice}) { // eslint-disable-line no-unused-vars
+function FilterChoiceOption({choice}) {
   if (choice === null) {
     choice = {
       label: "",
