@@ -1,23 +1,34 @@
 import { RTable } from "./index";
+import { SimplePagination } from "./pagination";
 import { render } from "react-dom";
 import { createElement as h } from "react";
 /* eslint-env browser */
 
-async function getUsersFromStack() {
-  const users = sessionStorage.getItem("stackUsers");
-  if (users) {
-    return JSON.parse(users);
-  }
-  const response = await fetch(
-    "https://api.stackexchange.com/2.2/users?site=stackoverflow"
-  );
-  const json = await response.json();
-  const output = {
-    items: json.items,
-    pagination: {},
+function cached(fn, prefix, storage) {
+  return async function wrapped(...args) {
+    const key = prefix + JSON.stringify(args);
+    const value = storage.getItem(key);
+    if (value !== null) {
+      return JSON.parse(value);
+    }
+    const newValue = await fn(...args);
+    storage.setItem(key, JSON.stringify(newValue));
+    return newValue;
   };
-  sessionStorage.setItem("stackUsers", JSON.stringify(output));
-  return output;
+}
+
+async function getUsersFromStack(query) {
+  const { page = 1 } = query;
+  const response = await fetch(
+    "https://api.stackexchange.com/2.2/users?site=stackoverflow" +
+      "&page=" +
+      encodeURIComponent(page)
+  );
+  const { items, has_more: hasMore } = await response.json();
+  return {
+    items,
+    pagination: new SimplePagination({ page, hasMore }),
+  };
 }
 
 function StackOverflowTable() {
@@ -25,14 +36,52 @@ function StackOverflowTable() {
     get: () => Promise.resolve({}),
     set: () => Promise.resolve(),
   };
-  const dataSource = getUsersFromStack;
-  return h(RTable, { queryStorage, dataSource }, ({ items }) => {
-    return h(
-      "div",
-      { style: { display: "flex", flexWrap: "wrap" } },
-      items.map(item => h(StackOverflowUser, { user: item, key: item.user_id }))
-    );
-  });
+  const dataSource = cached(
+    getUsersFromStack,
+    "getUsersFromStack",
+    sessionStorage
+  );
+  return h(
+    RTable,
+    { queryStorage, dataSource },
+    ({ pagination, items, updateQuery }) => {
+      return h(
+        "div",
+        {},
+        h(
+          "div",
+          {},
+          `Page ${pagination.page}, hasMore: ${
+            pagination.hasMore ? "true" : "false"
+          }`,
+          h(
+            "button",
+            {
+              disabled: !pagination.previousPage,
+              onClick: () => updateQuery({ page: pagination.previousPage }),
+            },
+            "Prev"
+          ),
+          h(
+            "button",
+            {
+              disabled: !pagination.nextPage,
+              onClick: () => updateQuery({ page: pagination.nextPage }),
+            },
+            "Next"
+          )
+        ),
+
+        h(
+          "div",
+          { style: { display: "flex", flexWrap: "wrap" } },
+          items.map(item =>
+            h(StackOverflowUser, { user: item, key: item.user_id })
+          )
+        )
+      );
+    }
+  );
 }
 
 function StackOverflowUser({ user }) {

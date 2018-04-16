@@ -12,7 +12,7 @@ export class RTable extends PureComponent {
       query: {},
     };
 
-    this.runQuery = this.runQuery.bind(this);
+    this.updateQuery = this.updateQuery.bind(this);
   }
 
   async componentDidMount() {
@@ -26,21 +26,27 @@ export class RTable extends PureComponent {
     const { dataSource } = this.props;
     this.setState({ query, isLoading: true });
     const { items, pagination } = await dataSource(query);
+    console.log("[runQuery]", "items", items, "pagination", pagination);
     this.setState({ query, items, pagination });
     // TODO handle rejection of dataSource (error boundary?)
     // TODO handle multiple concurrent runQuery calls, note how isLoading could get funny, also how about .cancel() on data source promise
   }
 
+  updateQuery(ups) {
+    const newQuery = Object.assign({}, this.state.query, ups);
+    this.runQuery(newQuery);
+  }
+
   render() {
     const { isLoading, items, pagination, query } = this.state;
     const { children } = this.props;
-    const { runQuery } = this;
+    const { updateQuery } = this;
     return children({
       isLoading,
       items,
       pagination,
       query,
-      runQuery,
+      updateQuery,
     });
   }
 }
