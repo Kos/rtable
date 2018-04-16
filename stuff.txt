@@ -1,0 +1,129 @@
+
+
+/*
+
+type Query = any
+
+type DataSource = (Query) => Promise<Data>
+
+Interface Data {
+  items,
+  pagination,
+}
+
+interface QueryStorage {
+  get: () => Promise<Query>
+  set: (Query) => Promise<void>
+}
+
+interface Pagination {
+  
+}
+
+/* Usage */
+
+<RTable>
+  ({isLoading, items, query, pagination, runQuery}) => <>
+    <table>
+      <tr>
+        <th>Foo</th>
+        <th>Bar</th>
+        <th>Baz</th>
+      </tr>
+      {items.map((row, index) => (
+        <tr>
+          <td>{row.foo}</td>
+          <td>{row.bar}</td>
+          <td>{row.baz}</td>
+        </tr>
+      ))}
+    </table>
+  </>
+</RTable>
+
+/* Behaviour
+
+state:
+  isLoading = false
+  items = []
+  query = null
+  pagination = null
+
+on mount:
+- get query from serializer 
+- fire to datasource, then serialise query, obtain items and pagination
+
+on runQuery:
+- fire to datasource, then serialise query, obtain items and pagination
+
+*/
+
+class PureComponent {
+
+}
+
+
+class RTable extends PureComponent {
+  constructor() {
+    this.state = {
+      isLoading: true,
+      items: [],
+      pagination: {},
+      query: {},
+    };
+
+    this.runQuery = this.runQuery.bind(this);
+  }
+
+  async componentDidMount() {
+    const { queryStorage, dataSource } = this.props;
+    const query = await queryStorage.get();
+    // TODO handle rejection of queryStorage?
+    this.runQuery(query);
+  }
+
+  runQuery() {
+    this.setState({ query, isLoading: true });
+    const { items, pagination } = dataSource(query);
+    this.setState({ query, items, pagination })
+    // TODO handle rejection of dataSource (error boundary?)
+    // TODO handle multiple concurrent runQuery calls, note how isLoading could get funny, also how about .cancel() on data source promise
+  }
+
+  render() {
+    const { isLoading, items, pagination, query } = this.state;
+    const { runQuery } = this;
+    return this.children({
+      isLoading,
+      items,
+      pagination,
+      query,
+      runQuery,
+    });
+  }
+}
+RTable.propTypes = {
+  children: PropTypes.func.isRequired,
+  queryStorage: queryStorageType.isRequired,
+  dataSource: dataSourceType.isRequired,
+};
+
+
+/*
+
+HOW DO I USE THIS
+
+HOW WOULD I LIKE TO USE THIS
+
+
+A. custom
+- pass a component for filtering that 
+- pass a component for rendering the item
+
+B. auto-table
+- pass a list of columns
+- pass a list of selector widgets
+- pass a list of 
+
+
+*/
