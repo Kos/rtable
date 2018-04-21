@@ -9,4 +9,7 @@ module.exports = {
     filename: "[name].js",
     path: __dirname + "/dist",
   },
+  module: {
+    rules: [{ test: /\.js$/, exclude: /node_modules/, loader: "babel-loader" }],
+  },
 };

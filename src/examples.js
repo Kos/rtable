@@ -1,7 +1,7 @@
 import { RTable } from "./index";
 import { SimplePagination } from "./pagination";
 import { render } from "react-dom";
-import { createElement as h } from "react";
+import React from "react";
 /* eslint-env browser */
 
 function cached(fn, prefix, storage) {
@@ -41,78 +41,73 @@ function StackOverflowTable() {
     "getUsersFromStack",
     sessionStorage
   );
-  return h(
-    RTable,
-    { queryStorage, dataSource },
-    ({ pagination, items, updateQuery }) => {
-      return h(
-        "div",
-        {},
-        h(
-          "div",
-          {},
-          `Page ${pagination.page}, hasMore: ${
-            pagination.hasMore ? "true" : "false"
-          }`,
-          h(
-            "button",
-            {
-              disabled: !pagination.previousPage,
-              onClick: () => updateQuery({ page: pagination.previousPage }),
-            },
-            "Prev"
-          ),
-          h(
-            "button",
-            {
-              disabled: !pagination.nextPage,
-              onClick: () => updateQuery({ page: pagination.nextPage }),
-            },
-            "Next"
-          )
-        ),
-
-        h(
-          "div",
-          { style: { display: "flex", flexWrap: "wrap" } },
-          items.map(item =>
-            h(StackOverflowUser, { user: item, key: item.user_id })
-          )
-        )
-      );
-    }
+  return (
+    <RTable queryStorage={queryStorage} dataSource={dataSource}>
+      {({ pagination, items, updateQuery }) => (
+        <div>
+          <div>
+            Page {pagination.page}, hasMore:{" "}
+            {pagination.hasMore ? "true" : "false"}
+            <button
+              disabled={!pagination.previousPage}
+              onClick={() => updateQuery({ page: pagination.previousPage })}
+            >
+              Prev
+            </button>
+            <button
+              disabled={!pagination.nextPage}
+              onClick={() => updateQuery({ page: pagination.nextPage })}
+            >
+              Next
+            </button>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            {items.map(item => (
+              <StackOverflowUser user={item} key={item.user_id} />
+            ))}
+          </div>
+        </div>
+      )}
+    </RTable>
   );
 }
 
 function StackOverflowUser({ user }) {
-  return div(
-    "user-info ",
-    div(
-      "user-gravatar32",
-      a(
-        user.website_url,
-        div("gravatar-wrapper-32", img(user.profile_image, 32, 32))
-      )
-    ),
-    div(
-      "user-details",
-      a(user.link, user.display_name),
-      div(
-        "-flair",
-        span("reputation-score", rep(user.reputation)),
-        badges("gold", user.badge_counts ? user.badge_counts.gold : 0),
-        badges("silver", user.badge_counts ? user.badge_counts.silver : 0),
-        badges("bronze", user.badge_counts ? user.badge_counts.bronze : 0)
-      )
-    )
+  return (
+    <div className="user-info">
+      <div className="user-gravatar32">
+        <a href={user.website_url}>
+          <div className="gravatar-wrapper-32">
+            <img
+              src={user.profile_image}
+              alt="Profile image"
+              width={32}
+              height={32}
+            />
+          </div>
+        </a>
+      </div>
+      <div className="user-details">
+        <a href={user.link}>{user.display_name}</a>
+        <div className="-flair">
+          <span className="reputation-score">{rep(user.reputation)}</span>
+          <Badges
+            name="gold"
+            count={user.badge_counts ? user.badge_counts.gold : 0}
+          />
+          <Badges
+            name="silver"
+            count={user.badge_counts ? user.badge_counts.silver : 0}
+          />
+          <Badges
+            name="bronze"
+            count={user.badge_counts ? user.badge_counts.bronze : 0}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
-
-const div = (className, ...args) => h("div", { className }, ...args);
-const span = (className, ...args) => h("span", { className }, ...args);
-const spanTitle = (title, ...args) => h("span", { title }, ...args);
-const a = (href, ...args) => h("a", { href }, ...args);
-const img = (src, width, height) => h("img", { src, width, height, alt: "" });
 
 const rep = number => {
   let suffix = "";
@@ -127,18 +122,19 @@ const rep = number => {
   }
 };
 
-const badges = (name, count) => {
+const Badges = ({ name, count }) => {
   if (!count) {
     return null;
   }
-  return spanTitle(
-    `${count} ${name} badge${count > 1 ? "s" : ""}`,
-    span("badge" + { gold: 1, silver: 2, bronze: 3 }[name]),
-    span("badgecount", count)
+  const title = `${count} ${name} badge${count > 1 ? "s" : ""}`;
+  return (
+    <span title={title}>
+      <span className={"badge" + { gold: 1, silver: 2, bronze: 3 }[name]} />
+      <span className="badgecount">{count}</span>
+    </span>
   );
 };
 
 window.stackOverflowExample = container => {
-  const elt = h(StackOverflowTable);
-  render(elt, container);
+  render(<StackOverflowTable />, container);
 };
