@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-export default function StackOverflowUser({ user }) {
+export function StackOverflowUser({ user }) {
   return (
     <div className="user-info">
       <div className="user-gravatar32">
