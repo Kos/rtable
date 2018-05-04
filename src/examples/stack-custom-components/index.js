@@ -28,16 +28,15 @@ function StackOverflowTable() {
   return (
     <RTable queryStorage={queryStorage} dataSource={getUsersFromStack}>
       {({ pagination, items, updateQuery }) => (
-        <div>
-          <div>
-            Page {pagination.page}, hasMore:{" "}
-            {pagination.hasMore ? "true" : "false"}
+        <div style={{ width: 800 }}>
+          <div style={{ textAlign: "center" }}>
             <button
               disabled={!pagination.previousPage}
               onClick={() => updateQuery({ page: pagination.previousPage })}
             >
               Prev
-            </button>
+            </button>{" "}
+            Page {pagination.page}{" "}
             <button
               disabled={!pagination.nextPage}
               onClick={() => updateQuery({ page: pagination.nextPage })}
