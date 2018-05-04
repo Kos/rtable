@@ -1,5 +1,6 @@
 import { PureComponent } from "react";
 import PropTypes from "prop-types";
+export { URLQueryStorage } from "./queryStorage";
 
 export class RTable extends PureComponent {
   constructor(props) {
@@ -23,11 +24,11 @@ export class RTable extends PureComponent {
   }
 
   async runQuery(query) {
-    const { dataSource } = this.props;
+    const { dataSource, queryStorage } = this.props;
     this.setState({ query, isLoading: true });
     const { items, pagination } = await dataSource(query);
-    console.log("[runQuery]", "items", items, "pagination", pagination);
     this.setState({ query, items, pagination });
+    await queryStorage.set(query);
     // TODO handle rejection of dataSource (error boundary?)
     // TODO handle multiple concurrent runQuery calls, note how isLoading could get funny, also how about .cancel() on data source promise
   }

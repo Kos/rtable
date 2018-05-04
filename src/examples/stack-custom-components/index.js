@@ -3,7 +3,7 @@ import { render } from "react-dom";
 
 import { getCached } from "../utils/network";
 import { StackOverflowUser } from "./components";
-import { RTable } from "../../index";
+import { RTable, URLQueryStorage } from "../../index";
 import { SimplePagination } from "../../pagination";
 
 async function getUsersFromStack(query) {
@@ -21,12 +21,8 @@ async function getUsersFromStack(query) {
 }
 
 function StackOverflowTable() {
-  const queryStorage = {
-    get: () => Promise.resolve({}),
-    set: () => Promise.resolve(),
-  };
   return (
-    <RTable queryStorage={queryStorage} dataSource={getUsersFromStack}>
+    <RTable queryStorage={new URLQueryStorage()} dataSource={getUsersFromStack}>
       {({ pagination, items, updateQuery }) => (
         <div style={{ width: 800 }}>
           <div style={{ textAlign: "center" }}>

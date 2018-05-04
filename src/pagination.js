@@ -1,6 +1,6 @@
 export class SimplePagination {
   constructor({ page = 1, pageCount = null, hasMore = false }) {
-    this.page = page;
+    this.page = parseInt(page, 10) || 1;
     this.pageCount = pageCount;
     this.hasMore = hasMore;
     if (hasMore) {
