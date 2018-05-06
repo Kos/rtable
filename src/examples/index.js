@@ -1,1 +1,2 @@
-import "./stack-custom-components";
+import "./stack";
+import "./github";
