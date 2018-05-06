@@ -6,11 +6,13 @@ import { RTable, URLQueryStorage } from "../../index";
 import { BootstrapView } from "../../views/";
 import { SimplePagination } from "../../pagination";
 
-async function getUsersFromStack(query) {
+async function getCommitsFromGithub(query) {
   const { page = 1 } = query;
   const items = await getCached(
     "https://api.github.com/repos/tomchristie/django-rest-framework/commits" +
-      "?per_page=5"
+      "?per_page=5" +
+      "&page=" +
+      page
   );
   // Navigation is in headers!
   return {
@@ -51,7 +53,10 @@ function GithubTable() {
   ];
 
   return (
-    <RTable queryStorage={new URLQueryStorage()} dataSource={getUsersFromStack}>
+    <RTable
+      queryStorage={new URLQueryStorage()}
+      dataSource={getCommitsFromGithub}
+    >
       {({ pagination, items, updateQuery }) => (
         <BootstrapView
           pagination={pagination}
